@@ -1,0 +1,5 @@
+#!/bin/bash
+#filename:make-BigNumberAdd
+nasm -f elf BigNumberAdd.asm 
+ld -m elf_i386 BigNumberAdd.o -o BigNumberAdd
+./BigNumberAdd

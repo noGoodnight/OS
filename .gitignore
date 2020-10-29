@@ -1,0 +1,6 @@
+### JetBrains ###
+.idea
+
+### FAT12 ###
+mount
+*.img
