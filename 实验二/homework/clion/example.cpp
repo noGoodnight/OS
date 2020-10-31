@@ -91,7 +91,7 @@ void printLSWithPath(Node *root, string path, int &exist, bool hasL);           
 void getContent(FILE *fat12, int startClus, Node *son);                //初始化链表时用来获取文件中的信息
 void printCat(Node *root, string path, int &exist);                //打印cat命令
 void myPrint(const char *p); // my print
-void split(const string &s, vector <string> &sv, const char flag = ' '); // split
+void split(const string &s, vector<string> &sv, const char flag = ' '); // split
 void pathDeal(string &s); // pathDeal
 
 int main() {
@@ -131,7 +131,7 @@ int main() {
         myPrint("> ");
         string input;
         getline(cin, input);
-        vector <string> input_list;
+        vector<string> input_list;
         split(input, input_list, ' ');
         for (auto it = input_list.begin(); it != input_list.end();) {//删除数组中空格产生的空位置
             if (*it == "") {
@@ -692,7 +692,7 @@ void myPrint(const char *p) {
 }
 
 
-void split(const string &s, vector <string> &sv, const char flag) {
+void split(const string &s, vector<string> &sv, const char flag) {
     sv.clear();
     istringstream iss(s);
     string temp;
