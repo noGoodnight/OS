@@ -90,11 +90,9 @@ void printLS_L(Node *root);                    //打印 ls -l命令
 void printLSWithPath(Node *root, string path, int &exist, bool hasL);            //打印ls -l 地址  命令
 void getContent(FILE *fat12, int startClus, Node *son);                //初始化链表时用来获取文件中的信息
 void printCat(Node *root, string path, int &exist);                //打印cat命令
-void myPrint(const char *p);
-
-void split(const string &s, vector <string> &sv, const char flag = ' ');
-
-void pathDeal(string &s);
+void myPrint(const char *p); // my print
+void split(const string &s, vector <string> &sv, const char flag = ' '); // split
+void pathDeal(string &s); // pathDeal
 
 int main() {
     FILE *fat12;
@@ -130,7 +128,7 @@ int main() {
 
     while (true) {   //解析输入的命令
         //cout << "> ";
-        myPrint(">");
+        myPrint("> ");
         string input;
         getline(cin, input);
         vector <string> input_list;

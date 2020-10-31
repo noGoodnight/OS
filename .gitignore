@@ -1,5 +1,7 @@
 ### JetBrains ###
 .idea
+cmake-build-debug
+CMakeLists.txt
 
 ### FAT12 ###
 mount
