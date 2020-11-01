@@ -350,6 +350,7 @@ void readChildren(FILE *fat12, int startClus, Node *father) {
     int currentClus = startClus;
     int value = 0;//value用来查看是否存在多个簇（查FAT表）
     while (value < 0xFF8) {
+        cout << value << endl;
         value = getFATValue(fat12, currentClus);//查FAT表获取下一个簇号
         if (value == 0xFF7) {
             myPrint("坏簇，读取失败!\n");
