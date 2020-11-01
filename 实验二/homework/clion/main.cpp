@@ -16,13 +16,13 @@ extern "C" void asm_print(const char *, const int);
 
 typedef unsigned char byte;
 typedef unsigned short word;
-typedef unsigned char dword;
+typedef unsigned int dword;
 
-const string ParamError = "parameter";
-const string CommandError = "command";
-const string DirectoryError = "directory";
-const string FileError = "file";
-const string OpenFileError = "open";
+const string ParamError = "parameter error\n";
+const string CommandError = "command error\n";
+const string DirectoryError = "directory error\n";
+const string FileError = "file error\n";
+const string OpenFileError = "open error\n";
 
 int ByteInSector;
 int SectorInCluster;
@@ -51,7 +51,7 @@ struct Boot {
 struct Root {
     char rootName[11];
     byte rootAttributes;
-    char reserverd[10];
+    char reserved[10];
     word modifiedTime;
     word modifiedDate;
     word firstCluster;
@@ -67,23 +67,29 @@ public:
     string path;
     dword fileSize;
     bool isFile = false;
-    bool isRoot = true;
+    bool isValue = true;
     int numOfDirectory = 0;
-    int numOfFiles = 0;
+    int numOfFile = 0;
     char *content = new char[5000]{NULL};
 };
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-void printStr(const char *s);
+void printStr(const char *);
 
-void split(const string s, vector<string> sv, const char flag = ' ');
+void split(const string, vector<string>, const char flag = ' ');
 
-void readBoot(FILE *fat12, Boot *boot);
+void readBoot(FILE *, Boot *);
 
-void readFiles(FILE *fat12, Root *root, Node *rootNode);
+void readRootFiles(FILE *, Root *, Node *);
 
-void getContent(FILE *fat12, int startCluster, Node *son);
+void getContent(FILE *, int, Node *);
+
+void createDirectoryNode(Node *);
+
+void readDirectoryFiles(FILE *, int, Node *);
+
+int getFATValue(FILE *, int);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -109,15 +115,18 @@ int main() {
     FileInRoot = boot->fileInRoot;
     SectorInFAT = (boot->sectorInFAT != 0) ? boot->sectorInFAT : boot->sectorInFAT2;
 
+    readRootFiles(fat12, root, rootNode);
+
     while (true) {
         string command;
         vector<string> options;
 
         printStr("> ");
         getline(cin, command);
+        cout << command << endl;
         split(command, options, ' ');
 
-        for (auto it = options.begin(); it != options.end();) {
+        for (vector<string>::iterator it = options.begin(); it != options.end();) {
             if (*it == "") {
                 it = options.erase(it);
             } else {
@@ -126,9 +135,14 @@ int main() {
         }
 
         if (options[0].compare("exit") == 0) {
+            fclose(fat12);
             return 0;
+        } else if (options[0].compare("ls") == 0) {
+            printStr("ls\n");
+        } else if (options[0].compare("cat") == 0) {
+            printStr("cat");
         } else {
-            printStr("next");
+            printStr(CommandError.c_str());
         }
     }
 }
@@ -149,23 +163,23 @@ void split(const string s, vector<string> sv, const char flag) {
 
 void readBoot(FILE *fat12, Boot *boot) {
     if (fseek(fat12, 11, SEEK_SET) == -1) {
-        printStr("main readBoot fseek\n");
+        printStr("readBoot fseek\n");
     }
     if (fread(boot, 1, 25, fat12) != 25) {
-        printStr("main readBoot fread\n");
+        printStr("readBoot fread\n");
     }
 }
 
-void readFiles(FILE *fat12, Root *root, Node *father) {
+void readRootFiles(FILE *fat12, Root *root, Node *father) {
     int offset = (SectorInBoot * 1 + NumOfFAT * SectorInFAT) * ByteInSector;
     char filename[12];
 
     for (int i = 0; i < FileInRoot; i++) {
         if (fseek(fat12, offset, SEEK_SET) == -1) {
-            printStr("main readFiles fseek\n");
+            printStr("readFiles fseek\n");
         }
         if (fread(root, 1, 32, fat12) != 32) {
-            printStr("main readFiles fread\n");
+            printStr("readFiles fread\n");
         }
         offset += 32;
 
@@ -197,13 +211,176 @@ void readFiles(FILE *fat12, Root *root, Node *father) {
             son->fileSize = root->fileSize;
             son->isFile = true;
             son->path = father->path + filename + "/";
-            father->numOfFiles++;
+            father->numOfFile++;
             getContent(fat12, root->firstCluster, son);
         } else {
             int tempLong = -1;
-            for(int k = 0;k<11;k++){
-                
+            for (int k = 0; k < 11; k++) {
+                if (root->rootName[k] != ' ') {
+                    tempLong++;
+                    filename[tempLong] = root->rootName[k];
+                } else {
+                    tempLong++;
+                    filename[tempLong] = '\0';
+                    break;
+                }
+            }
+            Node *son = new Node;
+            father->files.push_back(son);
+            son->name = filename;
+            son->path = father->path + filename + "/";
+            father->numOfDirectory++;
+
+            createDirectoryNode(son);
+            readDirectoryFiles(fat12, root->firstCluster, son);
+        }
+    }
+}
+
+void getContent(FILE *fat12, int startCluster, Node *son) {
+    int offset = (SectorInBoot * 1 + SectorInFAT * NumOfFAT +
+                  (FileInRoot * 32 + ByteInSector - 1) / ByteInSector); // some questions
+    int currentCluster = startCluster;
+    int value = 0;
+    char *p = son->content;
+
+    if (startCluster == 0) {
+        return;
+    }
+    while (value < 0xFF8) {
+        value = getFATValue(fat12, currentCluster);
+        if (value == 0xFF7) {
+            printStr("getContent value==0xFF7\n");
+            break;
+        }
+        char *str = (char *) malloc(SectorInCluster * ByteInSector);
+        int startByte = offset + (currentCluster - 2) * SectorInCluster * ByteInSector;
+
+        if (fseek(fat12, startByte, SEEK_SET) == -1)
+            printStr("getContent fseek\n");
+        if (fread(str, 1, SectorInCluster * ByteInSector, fat12) != SectorInCluster * ByteInSector)
+            printStr("getContent fread\n");
+
+        for (int i = 0; i < SectorInCluster * ByteInSector; i++) {//读取赋值
+            *p = str[i];
+            p++;
+        }
+        free(str);
+        currentCluster = value;
+    }
+}
+
+void createDirectoryNode(Node *node) {
+    Node *q = new Node;
+    q->name = ".";
+    q->isValue = false;
+    node->files.push_back(q);
+    q = new Node;
+    q->name = "..";
+    q->isValue = false;
+    node->files.push_back(q);
+}
+
+void readDirectoryFiles(FILE *fat12, int startCluster, Node *father) {
+    int offset = ByteInSector *
+                 (SectorInBoot * 1 + NumOfFAT * SectorInFAT + (FileInRoot * 32 + ByteInSector - 1) / ByteInSector);
+    int currentCluster = startCluster;
+    int value = 0;
+
+    while (value < 0xFF8) {
+        value = getFATValue(fat12, currentCluster);
+        if (value == 0xFF7) {
+            printStr("readDirectoryFiles\n");
+            break;
+        }
+
+        int startByte = offset + (currentCluster - 2) * SectorInCluster * ByteInSector;
+        int count = SectorInCluster * ByteInSector;    //每簇的字节数
+        int loop = 0;
+
+        while (loop < count) {
+            char filename[12];
+            Root *sonRoot = new Root;
+
+            if (fseek(fat12, startByte + loop, SEEK_SET) == -1)
+                printStr("fseek in printFiles failed!\n");
+            if (fread(sonRoot, 1, 32, fat12) != 32)
+                printStr("fread in printFiles failed!\n");
+
+            loop += 32;
+            if (sonRoot->rootName[0] == '\0') {
+                continue;
+            }
+
+            if (sonRoot->rootAttributes != 0x10) {
+                int tempLong = -1;
+                for (int k = 0; k < 11; k++) {
+                    if (sonRoot->rootName[k] != ' ') {
+                        tempLong++;
+                        filename[tempLong] = sonRoot->rootName[k];
+                    } else { // filename: name (space) point extension (space)
+                        tempLong++;
+                        filename[tempLong] = '.';
+                        while (sonRoot->rootName[k] == ' ') {
+                            k++;
+                        }
+                        k--;
+                    }
+                }
+                tempLong++;
+                filename[tempLong] = '\0';
+
+                Node *son = new Node;
+                father->files.push_back(son);
+                son->name = filename;
+                son->fileSize = sonRoot->fileSize;
+                son->isFile = true;
+                son->path = father->path + filename + "/";
+                father->numOfFile++;
+                getContent(fat12, sonRoot->firstCluster, son);
+            } else {
+                int tempLong = -1;
+                for (int k = 0; k < 11; k++) {
+                    if (sonRoot->rootName[k] != ' ') {
+                        tempLong++;
+                        filename[tempLong] = sonRoot->rootName[k];
+                    } else {
+                        tempLong++;
+                        filename[tempLong] = '\0';
+                        break;
+                    }
+                }
+                Node *son = new Node;
+                father->files.push_back(son);
+                son->name = filename;
+                son->path = father->path + filename + "/";
+                father->numOfDirectory++;
+
+                createDirectoryNode(son);
+                readDirectoryFiles(fat12, sonRoot->firstCluster, son);
             }
         }
     }
 }
+
+int getFATValue(FILE *fat12, int num) {
+    int fatBase = ByteInSector * SectorInBoot;
+    int fatPosition = fatBase + num * 3 / 2;
+    int type = (num % 2 == 0) ? 0 : 1;
+    word *bytes = new word;
+
+    if (fseek(fat12, fatPosition, SEEK_SET) == -1) {
+        printStr("getFATValue fseek\n");
+    }
+    if (fread(bytes, 1, 2, fat12) != 2) {
+        printStr("getFATValue fread\n");
+    }
+
+    if (type == 0) {
+        *bytes = *bytes << 4;
+        return *bytes >> 4;
+    } else {
+        return *bytes >> 4;
+    }
+}
+
