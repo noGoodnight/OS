@@ -186,7 +186,21 @@ void readRootFiles(FILE *fat12, Root *root, Node *father) {
             continue;
         }
 
-        if (root->rootAttributes != 0x10) {
+        int boolean = 0;
+        for (int j = 0; j < 11; j++) {
+            if (!(((root->rootName[j] >= 48) && (root->rootName[j] <= 57)) ||
+                  ((root->rootName[j] >= 65) && (root->rootName[j] <= 90)) ||
+                  ((root->rootName[j] >= 97) && (root->rootName[j] <= 122)) ||
+                  (root->rootName[j] == ' '))) {
+                boolean = 1;    //非英文及数字、空格
+                break;
+            }
+        }
+        if (boolean == 1) {
+            continue;
+        }
+
+        if ((root->rootAttributes & 0x10) == 0) {
             int tempLong = -1;
             for (int k = 0; k < 11; k++) {
                 if (root->rootName[k] != ' ') {
@@ -280,147 +294,43 @@ void createDirectoryNode(Node *node) {
     node->files.push_back(q);
 }
 
-//void readDirectoryFiles(FILE *fat12, int startCluster, Node *father) {
-//    int offset = ByteInSector * (SectorInBoot * 1 + NumOfFAT * SectorInFAT + (FileInRoot * 32 + ByteInSector - 1) / ByteInSector);
-//    int currentCluster = startCluster;
-//    int value = 0;
-//
-//    while (value < 0xFF8) {
-//        cout << value << " ";
-//        value = getFATValue(fat12, currentCluster);
-//        if (value == 0xFF7) {
-//            printStr("readDirectoryFiles\n");
-//            break;
-//        }
-//
-//        int startByte = offset + (currentCluster - 2) * SectorInCluster * ByteInSector;
-//        int count = SectorInCluster * ByteInSector;    //每簇的字节数
-//        int loop = 0;
-//
-//        while (loop < count) {
-//            char filename[12];
-//            Root *sonRoot = new Root;
-//
-//            if (fseek(fat12, startByte + loop, SEEK_SET) == -1)
-//                printStr("fseek in printFiles failed!\n");
-//            if (fread(sonRoot, 1, 32, fat12) != 32)
-//                printStr("fread in printFiles failed!\n");
-//
-//            loop += 32;
-//            if (sonRoot->rootName[0] == '\0') {
-//                continue;
-//            }
-//
-//            int boolean = 0;
-//            for (int j = 0; j < 11; j++) {
-//                if (!(((sonRoot->rootName[j] >= 48) && (sonRoot->rootName[j] <= 57)) ||
-//                      ((sonRoot->rootName[j] >= 65) && (sonRoot->rootName[j] <= 90)) ||
-//                      ((sonRoot->rootName[j] >= 97) && (sonRoot->rootName[j] <= 122)) ||
-//                      (sonRoot->rootName[j] == ' '))) {
-//                    boolean = 1;    //非英文及数字、空格
-//                    break;
-//                }
-//            }
-//            if (boolean == 1) {
-//                continue;
-//            }
-//
-//            if (sonRoot->rootAttributes != 0x10) {
-//                int tempLong = -1;
-//                for (int k = 0; k < 11; k++) {
-//                    if (sonRoot->rootName[k] != ' ') {
-//                        tempLong++;
-//                        filename[tempLong] = sonRoot->rootName[k];
-//                    } else { // filename: name (space) point extension (space)
-//                        tempLong++;
-//                        filename[tempLong] = '.';
-//                        while (sonRoot->rootName[k] == ' ') {
-//                            k++;
-//                        }
-//                        k--;
-//                    }
-//                }
-//                tempLong++;
-//                filename[tempLong] = '\0';
-//
-//                Node *son = new Node;
-//                father->files.push_back(son);
-//                son->name = filename;
-//                son->fileSize = sonRoot->fileSize;
-//                son->isFile = true;
-//                son->path = father->path + filename + "/";
-//                father->numOfFile++;
-//                getContent(fat12, sonRoot->firstCluster, son);
-//            } else {
-//                int tempLong = -1;
-//                for (int k = 0; k < 11; k++) {
-//                    if (sonRoot->rootName[k] != ' ') {
-//                        tempLong++;
-//                        filename[tempLong] = sonRoot->rootName[k];
-//                    } else {
-//                        tempLong++;
-//                        filename[tempLong] = '\0';
-//                        break;
-//                    }
-//                }
-//                Node *son = new Node;
-//                father->files.push_back(son);
-//                son->name = filename;
-//                son->path = father->path + filename + "/";
-//                father->numOfDirectory++;
-//
-//                createDirectoryNode(son);
-//                readDirectoryFiles(fat12, sonRoot->firstCluster, son);
-//            }
-//        }
-//
-//        currentCluster = value;
-//    }
-//}
-
 void readDirectoryFiles(FILE *fat12, int startCluster, Node *father) {
-    //数据区的第一个簇（即2号簇）的偏移字节
-    int dataBase = ByteInSector * (SectorInBoot + SectorInFAT * NumOfFAT + (FileInRoot * 32 + ByteInSector - 1) / ByteInSector);
-
+    int offset = ByteInSector *
+                 (SectorInBoot * 1 + NumOfFAT * SectorInFAT + (FileInRoot * 32 + ByteInSector - 1) / ByteInSector);
     int currentCluster = startCluster;
-    int value = 0;//value用来查看是否存在多个簇（查FAT表）
+    int value = 0;
+
     while (value < 0xFF8) {
-        value = getFATValue(fat12, currentCluster);//查FAT表获取下一个簇号
+        value = getFATValue(fat12, currentCluster);
         if (value == 0xFF7) {
-            printStr("坏簇，读取失败!\n");
+            printStr("readDirectoryFiles\n");
             break;
         }
 
-
-        int startByte = dataBase + (currentCluster - 2) * SectorInCluster * ByteInSector;
-        int check;
-
+        int startByte = offset + (currentCluster - 2) * SectorInCluster * ByteInSector;
         int count = SectorInCluster * ByteInSector;    //每簇的字节数
         int loop = 0;
-        while (loop < count) {
-            Root sonEntry;//读取目录项
-            Root *sonEntryP = &sonEntry;
-            check = fseek(fat12, startByte + loop, SEEK_SET);
-            if (check == -1)
-                printStr("fseek in printFiles failed!\n");
 
-            check = fread(sonEntryP, 1, 32, fat12);
-            cout << check << endl;
-            return;
-            if (check != 32)
-                printStr("fread in printFiles failed!\n");//读取完毕
+        while (loop < count) {
+            char filename[12];
+            Root *sonRoot = new Root;
+
+            if (fseek(fat12, startByte + loop, SEEK_SET) == -1)
+                printStr("fseek in printFiles failed!\n");
+            if (fread(sonRoot, 1, 32, fat12) != 32)
+                printStr("fread in printFiles failed!\n");
+
             loop += 32;
-            if (sonEntryP->rootName[0] == '\0') {
+            if (sonRoot->rootName[0] == '\0') {
                 continue;
-            }    //空条目不输出
-            //过滤非目标文件
-            int j;
+            }
+
             int boolean = 0;
-            for (j = 0; j < 11; j++) {
-                if (!(((sonEntryP->rootName[j] >= 48) && (sonEntryP->rootName[j] <= 57)) ||
-                      ((sonEntryP->rootName[j] >= 65) && (sonEntryP->rootName[j] <= 90)) ||
-                      ((sonEntryP->rootName[j] >= 97) && (sonEntryP->rootName[j] <= 122)) ||
-                      (sonEntryP->rootName[j] == ' '))) {
+            for (int j = 0; j < 11; j++) {
+                if (!(((sonRoot->rootName[j] >= 48) && (sonRoot->rootName[j] <= 57)) ||
+                      ((sonRoot->rootName[j] >= 65) && (sonRoot->rootName[j] <= 90)) ||
+                      ((sonRoot->rootName[j] >= 97) && (sonRoot->rootName[j] <= 122)) ||
+                      (sonRoot->rootName[j] == ' '))) {
                     boolean = 1;    //非英文及数字、空格
                     break;
                 }
@@ -429,62 +339,57 @@ void readDirectoryFiles(FILE *fat12, int startCluster, Node *father) {
                 continue;
             }
 
-
-            if ((sonEntryP->rootAttributes & 0x10) == 0) {
-                //文件处理
-                char tempName[12];    //暂存替换空格为点后的文件名
-                int k;
+            if ((sonRoot->rootAttributes & 0x10) == 0) {
                 int tempLong = -1;
-                for (k = 0; k < 11; k++) {
-                    if (sonEntryP->rootName[k] != ' ') {
+                for (int k = 0; k < 11; k++) {
+                    if (sonRoot->rootName[k] != ' ') {
                         tempLong++;
-                        tempName[tempLong] = sonEntryP->rootName[k];
-                    } else {
+                        filename[tempLong] = sonRoot->rootName[k];
+                    } else { // filename: name (space) point extension (space)
                         tempLong++;
-                        tempName[tempLong] = '.';
-                        while (sonEntryP->rootName[k] == ' ') k++;
+                        filename[tempLong] = '.';
+                        while (sonRoot->rootName[k] == ' ') {
+                            k++;
+                        }
                         k--;
                     }
                 }
                 tempLong++;
-                tempName[tempLong] = '\0';    //到此为止，把文件名提取出来放到tempName里
-                Node *son = new Node();
-                father->files.push_back(son);
-                son->name = tempName;
-                son->fileSize = sonEntryP->fileSize;
-                son->isFile = true;
-                son->path = father->path + tempName + "/";
-                father->numOfFile++;
-                getContent(fat12, sonEntryP->firstCluster, son);
+                filename[tempLong] = '\0';
 
+                Node *son = new Node;
+                father->files.push_back(son);
+                son->name = filename;
+                son->fileSize = sonRoot->fileSize;
+                son->isFile = true;
+                son->path = father->path + filename + "/";
+                father->numOfFile++;
+                getContent(fat12, sonRoot->firstCluster, son);
             } else {
-                char tempName[12];
-                int count = -1;
+                int tempLong = -1;
                 for (int k = 0; k < 11; k++) {
-                    if (sonEntryP->rootName[k] != ' ') {
-                        count++;
-                        tempName[count] = sonEntryP->rootName[k];
+                    if (sonRoot->rootName[k] != ' ') {
+                        tempLong++;
+                        filename[tempLong] = sonRoot->rootName[k];
                     } else {
-                        count++;
-                        tempName[count] = '\0';
+                        tempLong++;
+                        filename[tempLong] = '\0';
+                        break;
                     }
                 }
-
-                Node *son = new Node();
+                Node *son = new Node;
                 father->files.push_back(son);
-                son->name = tempName;
-                son->path = father->path + tempName + "/";
+                son->name = filename;
+                son->path = father->path + filename + "/";
                 father->numOfDirectory++;
+
                 createDirectoryNode(son);
-                readDirectoryFiles(fat12, sonEntryP->firstCluster, son);
+                readDirectoryFiles(fat12, sonRoot->firstCluster, son);
             }
-
-
         }
 
-
-        currentCluster = value;//下一个簇
-    };
+        currentCluster = value;
+    }
 }
 
 int getFATValue(FILE *fat12, int num) {

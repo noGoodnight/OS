@@ -121,10 +121,17 @@ int main() {
         FATSz = bpb_ptr->BPB_TotSec32;
     }
 
+    cout << RootEntCnt << endl;
+
     struct RootEntry rootEntry;
     struct RootEntry *rootEntry_ptr = &rootEntry;
 
     ReadFiles(fat12, rootEntry_ptr, root);//*****构建文件链表
+
+    for (int i = 0; i < root->next.size(); i++) {
+        cout << root->next[i]->name << endl;
+        cout << root->next[i]->isfile << endl;
+    }
 
     while (true) {   //解析输入的命令
         //cout << "> ";
@@ -265,7 +272,6 @@ void ReadFiles(FILE *fat12, struct RootEntry *rootEntry_ptr, Node *father) {
     //依次处理根目录中的各个条目
     int i;
     for (i = 0; i < RootEntCnt; i++) {
-
         check = fseek(fat12, base, SEEK_SET);
         if (check == -1)
             myPrint("fseek in printFiles failed!\n");
@@ -350,7 +356,6 @@ void readChildren(FILE *fat12, int startClus, Node *father) {
     int currentClus = startClus;
     int value = 0;//value用来查看是否存在多个簇（查FAT表）
     while (value < 0xFF8) {
-        cout << value << endl;
         value = getFATValue(fat12, currentClus);//查FAT表获取下一个簇号
         if (value == 0xFF7) {
             myPrint("坏簇，读取失败!\n");
