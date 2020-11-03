@@ -18,11 +18,11 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
 
-const string ParamError = "parameter error\n";
-const string CommandError = "command error\n";
-const string DirectoryError = "directory error\n";
-const string FileError = "file error\n";
-const string OpenFileError = "open error\n";
+const string CommandError = "Error! Invalid Command!\n";
+const string OptionError = "Error! Invalid Option\n";
+const string PathError = "Error! Invalid Path\n";
+const string DirectoryError = "Error! Can Not Open The Directory\n";
+const string FileError = "Error! Can Not Open The File\n";
 
 int ByteInSector;
 int SectorInCluster;
@@ -91,6 +91,10 @@ void readDirectoryFiles(FILE *, int, Node *);
 
 int getFATValue(FILE *, int);
 
+bool printLS(Node *, string, bool);
+
+bool printCAT(Node *, string);
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 int main() {
@@ -120,6 +124,7 @@ int main() {
     while (true) {
         string command;
         vector<string> options;
+        bool nextCommand = false;
 
         printStr("> ");
         getline(cin, command);
@@ -137,9 +142,59 @@ int main() {
             fclose(fat12);
             return 0;
         } else if (options[0].compare("ls") == 0) {
-            printStr("ls\n");
+            string path = "/";
+            bool detailed = false;
+            bool ackPath = false;
+
+            for (int i = 1; i < options.size(); i++) {
+                if (options[i][0] == '-') {
+                    detailed = true;
+                    if (options[i].length() == 1) {
+                        printStr(OptionError.c_str());
+                        nextCommand = true;
+                        break;
+                    }
+                    for (int j = 1; j < options[i].length(); j++) {
+                        if (options[i][j] != 'l') {
+                            printStr(OptionError.c_str());
+                            nextCommand = true;
+                            break;
+                        }
+                    }
+                } else if (options[i][0] == '/') {
+                    if (ackPath) {
+                        printStr(PathError.c_str());
+                        nextCommand = true;
+                        break;
+                    } else {
+                        path = options[i];
+                        ackPath = true;
+                    }
+                } else {
+                    printStr(OptionError.c_str());
+                    nextCommand = true;
+                    break;
+                }
+            }
+            if (nextCommand) {
+                continue;
+            }
+
+            bool result = printLS(rootNode, path, detailed);
+            if (!result) {
+                printStr(DirectoryError.c_str());
+            }
         } else if (options[0].compare("cat") == 0) {
-            printStr("cat\n");
+            if (options.size() == 1 || options.size() > 2) {
+                printStr(OptionError.c_str());
+                continue;
+            }
+
+            string filePath = options[1];
+            bool result = printCAT(rootNode, filePath);
+            if (!result) {
+                printStr(FileError.c_str());
+            }
         } else {
             printStr(CommandError.c_str());
         }
@@ -316,9 +371,9 @@ void readDirectoryFiles(FILE *fat12, int startCluster, Node *father) {
             Root *sonRoot = new Root;
 
             if (fseek(fat12, startByte + loop, SEEK_SET) == -1)
-                printStr("fseek in printFiles failed!\n");
+                printStr("readDirectoryFiles fseek\n");
             if (fread(sonRoot, 1, 32, fat12) != 32)
-                printStr("fread in printFiles failed!\n");
+                printStr("readDirectoryFiles fread\n");
 
             loop += 32;
             if (sonRoot->rootName[0] == '\0') {
@@ -411,5 +466,13 @@ int getFATValue(FILE *fat12, int num) {
     } else {
         return *bytes >> 4;
     }
+}
+
+bool printLS(Node *root, string path, bool detailed) {
+    return false;
+}
+
+bool printCAT(Node *root, string file) {
+    return false;
 }
 
