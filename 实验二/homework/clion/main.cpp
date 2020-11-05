@@ -91,9 +91,11 @@ void readDirectoryFiles(FILE *, int, Node *);
 
 int getFATValue(FILE *, int);
 
-bool printLS(Node *, string, bool);
+Node *findPath(Node *, string);
 
-bool printCAT(Node *, string);
+void printLS(Node *, bool);
+
+void printCAT(Node *);
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -180,9 +182,15 @@ int main() {
                 continue;
             }
 
-            bool result = printLS(rootNode, path, detailed);
-            if (!result) {
+            if (path[path.length() - 1] != '/') {
+                path = path + "/";
+            }
+            Node *result = findPath(rootNode, path);
+            if (result == nullptr || result->isValue == false || result->isFile == true) {
                 printStr(DirectoryError.c_str());
+                continue;
+            } else {
+                printLS(result, detailed);
             }
         } else if (options[0].compare("cat") == 0) {
             if (options.size() == 1 || options.size() > 2) {
@@ -191,9 +199,15 @@ int main() {
             }
 
             string filePath = options[1];
-            bool result = printCAT(rootNode, filePath);
-            if (!result) {
+            if (filePath[0] != '/') {
+                filePath = "/" + filePath;
+            }
+            Node *result = findPath(rootNode, filePath + "/");
+            if (result == nullptr || result->isFile == false) {
                 printStr(FileError.c_str());
+                continue;
+            } else {
+                printCAT(result);
             }
         } else {
             printStr(CommandError.c_str());
@@ -306,8 +320,8 @@ void readRootFiles(FILE *fat12, Root *root, Node *father) {
 }
 
 void getContent(FILE *fat12, int startCluster, Node *son) {
-    int offset = (SectorInBoot * 1 + SectorInFAT * NumOfFAT +
-                  (FileInRoot * 32 + ByteInSector - 1) / ByteInSector); // some questions
+    int offset = ByteInSector * (SectorInBoot + SectorInFAT * NumOfFAT +
+                                 (FileInRoot * 32 + ByteInSector - 1) / ByteInSector); // some question
     int currentCluster = startCluster;
     int value = 0;
     char *p = son->content;
@@ -328,8 +342,7 @@ void getContent(FILE *fat12, int startCluster, Node *son) {
             printStr("getContent fseek\n");
         if (fread(str, 1, SectorInCluster * ByteInSector, fat12) != SectorInCluster * ByteInSector)
             printStr("getContent fread\n");
-
-        for (int i = 0; i < SectorInCluster * ByteInSector; i++) {//读取赋值
+        for (int i = 0; i < SectorInCluster * ByteInSector; i++) {
             *p = str[i];
             p++;
         }
@@ -451,28 +464,85 @@ int getFATValue(FILE *fat12, int num) {
     int fatBase = SectorInBoot * ByteInSector;
     int fatPosition = fatBase + num * 3 / 2;
     int type = (num % 2 == 0) ? 0 : 1;
-    word *bytes = new word;
+    word bytes;
+    word *bytes_ptr = &bytes;
 
     if (fseek(fat12, fatPosition, SEEK_SET) == -1) {
         printStr("getFATValue fseek\n");
     }
-    if (fread(bytes, 1, 2, fat12) != 2) {
+    if (fread(bytes_ptr, 1, 2, fat12) != 2) {
         printStr("getFATValue fread\n");
     }
 
     if (type == 0) {
-        *bytes = *bytes << 4;
-        return *bytes >> 4;
+        bytes = bytes << 4;
+        return bytes >> 4;
     } else {
-        return *bytes >> 4;
+        return bytes >> 4;
     }
 }
 
-bool printLS(Node *root, string path, bool detailed) {
-    return false;
+Node *findPath(Node *root, string path) {
+    if (root->path.compare(path) == 0) {
+        return root;
+    } else {
+        for (int i = 0; i < root->files.size(); i++) {
+            Node *result = findPath(root->files[i], path);
+            if (result != nullptr) {
+                return result;
+            }
+
+        }
+    }
+    return nullptr;
 }
 
-bool printCAT(Node *root, string file) {
-    return false;
+void printLS(Node *root, bool detailed) {
+    printStr(root->path.c_str());
+    if (!detailed) {
+        printStr(":\n");
+        for (int i = 0; i < root->files.size(); i++) {
+            if (root->files[i]->isFile == false) {
+                printStr(("\033[31m" + root->files[i]->name + "\033[0m").c_str());
+            } else {
+                printStr(root->files[i]->name.c_str());
+            }
+            if (i == root->files.size() - 1) {
+                printStr("\n");
+            } else {
+                printStr(" ");
+            }
+        }
+    } else {
+        printStr((" " + to_string(root->numOfDirectory) + " " + to_string(root->numOfFile) + ":\n").c_str());
+        for (int i = 0; i < root->files.size(); i++) {
+            if (root->files[i]->isFile == false) {
+                if (root->files[i]->isValue == false) {
+                    printStr(("\033[31m" + root->files[i]->name + "\033[0m").c_str());
+                } else {
+                    printStr(("\033[31m" + root->files[i]->name + "\033[0m" + " " +
+                              to_string(root->files[i]->numOfDirectory) + " " +
+                              to_string(root->files[i]->numOfFile)).c_str());
+                }
+            } else {
+                printStr((root->files[i]->name + " " + to_string(root->files[i]->fileSize)).c_str());
+            }
+            printStr("\n");
+        }
+        printStr("\n");
+    }
+
+    for (int i = 0; i < root->files.size(); i++) {
+        if (root->files[i]->isValue == true && root->files[i]->isFile == false) {
+            printLS(root->files[i], detailed);
+        }
+    }
+}
+
+void printCAT(Node *root) {
+    if (root->content[0] != 0) {
+        printStr(root->content);
+    }
+    printStr("\n");
 }
 
