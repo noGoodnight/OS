@@ -105,7 +105,7 @@ int main() {
     Root *root;
     Node *rootNode;
 
-    fat12 = fopen("a.img", "rb");
+    fat12 = fopen("a1.img", "rb");
     boot = new Boot;
     root = new Root;
     rootNode = new Node;
