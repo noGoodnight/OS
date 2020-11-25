@@ -11,6 +11,7 @@
 */
 
 
+#include <stdio.h>
 #include "type.h"
 #include "const.h"
 #include "protect.h"
@@ -29,8 +30,6 @@ PRIVATE void set_video_start_addr(u32 addr);
 PRIVATE void flush(CONSOLE *p_con);
 
 PRIVATE void change_red(CONSOLE *p_con);
-
-PRIVATE void change_white(CONSOLE *p_con);
 
 /*======================================================================*
 			   init_screen
@@ -82,8 +81,8 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
                 if (p_con->cursor < p_con->original_addr + p_con->v_mem_limit - SCREEN_WIDTH) {
                     p_con->chs[p_con->index_chs] = '\n';
                     p_con->index_chs++;
-                    p_con->line_cursors[p_con->index_cursors] = p_con->cursor;
-                    p_con->index_cursors++;
+                    p_con->line_cursors[p_con->index_line_cursors] = p_con->cursor;
+                    p_con->index_line_cursors++;
                     p_con->cursor = p_con->original_addr +
                                     SCREEN_WIDTH * ((p_con->cursor - p_con->original_addr) / SCREEN_WIDTH + 1);
                 }
@@ -92,19 +91,19 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
             }
             break;
         case '\b':
-            if ((!p_con->search_mode && p_con->cursor > p_con->original_addr) ||
-                (p_con->search_mode && p_con->cursor > p_con->search_original_addr)) {
+            if ((!p_con->search_mode && (p_con->cursor > p_con->original_addr)) ||
+                (p_con->search_mode && (p_con->cursor > p_con->search_original_addr))) {
                 switch (p_con->chs[p_con->index_chs - 1]) {
                     case '\n':
-                        p_con->cursor = p_con->line_cursors[p_con->index_cursors - 1];
-                        p_con->index_cursors--;
+                        p_con->cursor = p_con->line_cursors[p_con->index_line_cursors - 1];
+                        p_con->index_line_cursors--;
                         p_con->index_chs--;
                         break;
                     case '\t':
                         for (int i = 0; i < 4; i++) {
                             p_con->index_chs--;
                             p_con->cursor--;
-                            if(p_con->search_mode){
+                            if (p_con->search_mode) {
                                 p_con->index_search_chs--;
                             }
                             p_vmem -= 2;
@@ -117,7 +116,7 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
                         *(p_vmem - 2) = ' ';
                         *(p_vmem - 1) = DEFAULT_CHAR_COLOR;
                         p_con->index_chs--;
-                        if(p_con->search_mode){
+                        if (p_con->search_mode) {
                             p_con->index_search_chs--;
                         }
                         break;
@@ -128,7 +127,7 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
             for (int i = 0; i < 4; i++) {
                 p_con->chs[p_con->index_chs] = '\t';
                 p_con->index_chs++;
-                if(p_con->search_mode){
+                if (p_con->search_mode) {
                     p_con->search_chs[p_con->index_search_chs] = '\t';
                     p_con->index_search_chs++;
                 }
@@ -139,8 +138,8 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
             }
             break;
         default:
-            if(p_con->search_mode){
-                p_con->search_chs[p_con->index_search_chs] = '\t';
+            if (p_con->search_mode) {
+                p_con->search_chs[p_con->index_search_chs] = ch;
                 p_con->index_search_chs++;
             }
             p_con->chs[p_con->index_chs] = ch;
@@ -237,13 +236,92 @@ PUBLIC void scroll_screen(CONSOLE *p_con, int direction) {
 }
 
 PRIVATE void change_red(CONSOLE *p_con) {
-
+    for (int i = 0; i < p_con->index_line_cursors; i++) {
+        unsigned int start = i * SCREEN_WIDTH;
+        while (start < p_con->line_cursors[i]) {
+            int match = 0;
+            for (int j = 0; j < p_con->index_search_chs; j++) {
+                u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+                if (p_con->search_chs[j] != '\t') {
+                    if (*(p_vmem + 2 * j) != p_con->search_chs[j]) {
+                        break;
+                    }
+                } else {
+                    if (*(p_vmem + 2 * j) != ' ') {
+                        break;
+                    }
+                }
+                if (j == p_con->index_search_chs - 1) {
+                    match = 1;
+                }
+            }
+            if (match) {
+                for (int j = 0; j < p_con->index_search_chs; j++) {
+                    u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+                    *(p_vmem + 1) = SEARCH_CHAR_COLOR;
+                    start++;
+                }
+            } else {
+                start++;
+            }
+        }
+    }
+    unsigned int start = p_con->index_line_cursors * SCREEN_WIDTH;
+    while (start < p_con->cursor_position) {
+        int match = 0;
+        for (int j = 0; j < p_con->index_search_chs; j++) {
+            u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+            if (p_con->search_chs[j] != '\t') {
+                if (*(p_vmem + 2 * j) != p_con->search_chs[j]) {
+                    break;
+                }
+            } else {
+                if (*(p_vmem + 2 * j) != ' ') {
+                    break;
+                }
+            }
+            if (j == p_con->index_search_chs - 1) {
+                match = 1;
+            }
+        }
+        if (match) {
+            for (int j = 0; j < p_con->index_search_chs; j++) {
+                u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+                *(p_vmem + 1) = SEARCH_CHAR_COLOR;
+                start++;
+            }
+        } else {
+            start++;
+        }
+    }
 }
 
-PRIVATE void change_white(CONSOLE *p_con) {
-
+PUBLIC void change_white(CONSOLE *p_con) {
+    for (int i = 0; i < p_con->index_line_cursors; i++) {
+        unsigned int start = i * SCREEN_WIDTH;
+        while (start < p_con->line_cursors[i]) {
+            u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+            if (*(p_vmem + 1) == SEARCH_CHAR_COLOR) {
+                *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
+            }
+            start++;
+        }
+    }
+    unsigned int start = p_con->index_line_cursors * SCREEN_WIDTH;
+    while (start < p_con->cursor) {
+        u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+        if (*(p_vmem + 1) == SEARCH_CHAR_COLOR) {
+            *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
+        }
+        start++;
+    }
 }
 
-PUBLIC void flush2(CONSOLE *p_on){
+PUBLIC void flush2(CONSOLE *p_on) {
     flush(p_on);
+}
+
+PUBLIC void set(){
+    set_video_start_addr(0);
+    set_cursor(0);
 }

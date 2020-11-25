@@ -51,11 +51,17 @@ PUBLIC void task_tty();
 PUBLIC void in_process(TTY *p_tty, u32 key);
 
 /* console.c */
+PUBLIC void init_screen(TTY *p_tty);
+
 PUBLIC void out_char(CONSOLE *p_con, char ch);
 
 PUBLIC void scroll_screen(CONSOLE *p_con, int direction);
 
 PUBLIC void flush2(CONSOLE *p_on);
+
+PUBLIC void change_white(CONSOLE *p_on);
+
+PUBLIC void set();
 
 /* 以下是系统调用相关 */
 

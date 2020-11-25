@@ -46,7 +46,7 @@ LABEL_START:			; <--- 从这里开始 *************
 	mov	sp, BaseOfStack
 
 	mov	dh, 0			; "Loading  "
-	;call	DispStrRealMode		; 显示字符串
+	call	DispStrRealMode		; 显示字符串
 
 	; 得到内存数
 	mov	ebx, 0			; ebx = 后续值, 开始时需为 0
@@ -138,14 +138,14 @@ LABEL_FILENAME_FOUND:			; 找到 KERNEL.BIN 后便来到这里继续
 	mov	ax, cx			; ax <- Sector 号
 
 LABEL_GOON_LOADING_FILE:
-;	push	ax			; ┓
-;	push	bx			; ┃
-;	mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Loading  " 后面打一个点, 形成这样的效果:
-;	mov	al, '.'			; ┃
-;	mov	bl, 0Fh			; ┃ Loading ......
-;	int	10h			; ┃
-;	pop	bx			; ┃
-;	pop	ax			; ┛
+	push	ax			; ┓
+	push	bx			; ┃
+	mov	ah, 0Eh			; ┃ 每读一个扇区就在 "Loading  " 后面打一个点, 形成这样的效果:
+	mov	al, '.'			; ┃
+	mov	bl, 0Fh			; ┃ Loading ......
+	int	10h			; ┃
+	pop	bx			; ┃
+	pop	ax			; ┛
 
 	mov	cl, 1
 	call	ReadSector
@@ -164,7 +164,7 @@ LABEL_FILE_LOADED:
 	call	KillMotor		; 关闭软驱马达
 
 	mov	dh, 1			; "Ready."
-	;call	DispStrRealMode		; 显示字符串
+	call	DispStrRealMode		; 显示字符串
 	
 ; 下面准备跳入保护模式 -------------------------------------------
 
@@ -625,14 +625,14 @@ DispMemInfo:
 	mov	edi, ARDStruct		;	{			// 依次显示：BaseAddrLow，BaseAddrHigh，LengthLow，LengthHigh，Type
 .1:					;
 	push	dword [esi]		;
-	;call	DispInt			;		DispInt(MemChkBuf[j*4]); // 显示一个成员
+	call	DispInt			;		DispInt(MemChkBuf[j*4]); // 显示一个成员
 	pop	eax			;
 	stosd				;		ARDStruct[j*4] = MemChkBuf[j*4];
 	add	esi, 4			;
 	dec	edx			;
 	cmp	edx, 0			;
 	jnz	.1			;	}
-	;call	DispReturn		;	printf("\n");
+	call	DispReturn		;	printf("\n");
 	cmp	dword [dwType], 1	;	if(Type == AddressRangeMemory) // AddressRangeMemory : 1, AddressRangeReserved : 2
 	jne	.2			;	{
 	mov	eax, [dwBaseAddrLow]	;
@@ -643,13 +643,13 @@ DispMemInfo:
 .2:					;	}
 	loop	.loop			;}
 					;
-	;call	DispReturn		;printf("\n");
+	call	DispReturn		;printf("\n");
 	push	szRAMSize		;
-	;call	DispStr			;printf("RAM size:");
+	call	DispStr			;printf("RAM size:");
 	add	esp, 4			;
 					;
 	push	dword [dwMemSize]	;
-	;call	DispInt			;DispInt(MemSize);
+	call	DispInt			;DispInt(MemSize);
 	add	esp, 4			;
 
 	pop	ecx
@@ -749,8 +749,7 @@ ALIGN	32
 LABEL_DATA:
 ; 实模式下使用这些符号
 ; 字符串
-;_szMemChkTitle:			db	"BaseAddrL BaseAddrH LengthLow LengthHigh   Type", 0Ah, 0
-_szMemChkTitle:			db	"", 0Ah, 0
+_szMemChkTitle:			db	"BaseAddrL BaseAddrH LengthLow LengthHigh   Type", 0Ah, 0
 _szRAMSize:			db	"RAM size:", 0
 _szReturn:			db	0Ah, 0
 ;; 变量

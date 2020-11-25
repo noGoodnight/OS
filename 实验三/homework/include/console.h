@@ -17,13 +17,14 @@ typedef struct s_console {
     unsigned int cursor;            /* 当前光标位置 */
     unsigned int index_chs; // current char
     unsigned char chs[5000];
-    unsigned int index_cursors;
+    unsigned int index_line_cursors;
     unsigned int line_cursors[1000];
     unsigned int index_search_chs;
     unsigned char search_chs[5000];
     unsigned char search_original_addr;
     unsigned int search_mode;
     unsigned int search_mode_lock;
+    unsigned int cursor_position;
 } CONSOLE;
 
 #define SCR_UP    1    /* scroll forward */

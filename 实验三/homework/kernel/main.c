@@ -20,7 +20,7 @@
                             kernel_main
  *======================================================================*/
 PUBLIC int kernel_main() {
-//    disp_str("-----\"kernel_main\" begins-----\n");
+    disp_str("-----\"kernel_main\" begins-----\n");
 
     TASK *p_task = task_table;
     PROCESS *p_proc = proc_table;
