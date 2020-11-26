@@ -45,11 +45,14 @@ PUBLIC void task_tty() {
             tty_do_read(p_tty);
             tty_do_write(p_tty);
         }
-        if (!p_tty->p_console->search_mode) {
-            if (((get_ticks() - t) * 1000 / HZ) >= 50000) {
-//                clear_screen(p_tty->p_console);
-                t = get_ticks();
+        if (((get_ticks() - t) * 1000 / HZ) >= 80000) {
+            for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
+                if(p_tty->p_console->search_mode == 0){
+                    break;
+                }
+                init_tty(p_tty);
             }
+            t = get_ticks();
         }
     }
 }
@@ -76,46 +79,46 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
     char output[2] = {'\0', '\0'};
 
     if (!(key & FLAG_EXT)) {
-        if (!p_tty->p_console->search_mode_lock) {
+        if (p_tty->p_console->search_mode_lock == 0) {
             put_key(p_tty, key);
         }
     } else {
         int raw_code = key & MASK_RAW;
         switch (raw_code) {
             case ENTER:
-                if (!p_tty->p_console->search_mode_lock) {
-                    if (p_tty->p_console->search_mode) {
+                if (p_tty->p_console->search_mode_lock == 0) {
+                    if (p_tty->p_console->search_mode == 1) {
                         p_tty->p_console->search_mode_lock = 1;
                     }
                 }
                 put_key(p_tty, '\n');
                 break;
             case BACKSPACE:
-                if (!p_tty->p_console->search_mode_lock) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     put_key(p_tty, '\b');
                 }
                 break;
             case UP:
-                if (!p_tty->p_console->search_mode_lock) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
                         scroll_screen(p_tty->p_console, SCR_DN);
                     }
                 }
                 break;
             case DOWN:
-                if (!p_tty->p_console->search_mode_lock) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
                         scroll_screen(p_tty->p_console, SCR_UP);
                     }
                 }
                 break;
             case TAB:
-                if (!p_tty->p_console->search_mode_lock) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     put_key(p_tty, '\t');
                 }
                 break;
             case ESC:
-                if (!p_tty->p_console->search_mode) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     p_tty->p_console->search_mode = 1;
                     p_tty->p_console->cursor_position = p_tty->p_console->cursor;
                 } else {
@@ -148,14 +151,14 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
             case F11:
             case F12:
                 /* Alt + F1~F12 */
-                if (!p_tty->p_console->search_mode_lock) {
+                if (p_tty->p_console->search_mode_lock == 0) {
                     if ((key & FLAG_ALT_L) || (key & FLAG_ALT_R)) {
                         select_console(raw_code - F1);
                     }
                 }
                 break;
             default:
-                if (!p_tty->p_console->search_mode_lock) {}
+                if (p_tty->p_console->search_mode_lock == 0) {}
                 break;
         }
     }
