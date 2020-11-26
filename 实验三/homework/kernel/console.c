@@ -50,7 +50,14 @@ PUBLIC void init_screen(TTY *p_tty) {
 
     if (nr_tty == 0) {
         /* 第一个控制台沿用原来的光标位置 */
-        p_tty->p_console->cursor = disp_pos / 2;
+//        p_tty->p_console->cursor = disp_pos / 2;
+        u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
+//        clear_screen(p_tty);
+        for (unsigned int i = 0; i < disp_pos / 2; i++) {
+            *p_vmem = ' ';
+            *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
+            p_vmem += 2;
+        }
         disp_pos = 0;
     } else {
         out_char(p_tty->p_console, nr_tty + '0');
@@ -321,7 +328,21 @@ PUBLIC void flush2(CONSOLE *p_on) {
     flush(p_on);
 }
 
-PUBLIC void set(){
-    set_video_start_addr(0);
-    set_cursor(0);
+PUBLIC void clear_screen(CONSOLE *p_con) {
+    for (int i = 0; i < p_con->index_line_cursors; i++) {
+        unsigned int start = i * SCREEN_WIDTH;
+        while (start < p_con->line_cursors[i]) {
+            u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+            *p_vmem = ' ';
+            *(p_vmem + 1) = ' ';
+            start++;
+        }
+    }
+    unsigned int start = p_con->index_line_cursors * SCREEN_WIDTH;
+    while (start < p_con->cursor) {
+        u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
+        *p_vmem = ' ';
+        *(p_vmem + 1) = ' ';
+        start++;
+    }
 }

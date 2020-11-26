@@ -39,30 +39,17 @@ PUBLIC void task_tty() {
         init_tty(p_tty);
     }
     select_console(0);
-//    u8 *p_vmem = (u8 *) V_MEM_BASE;
-//    for (int i = 0; i < V_MEM_SIZE >> 1; i++) {
-//        *p_vmem++ = ' ';
-//        *p_vmem++ = DEFAULT_CHAR_COLOR;
-//    }
-//    p_tty->p_console->cursor = 0;
-//    p_tty->p_console->current_start_addr = p_tty->p_console->original_addr;
-//    set();
-
     int t = get_ticks();
     while (1) {
         for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
             tty_do_read(p_tty);
             tty_do_write(p_tty);
         }
-        if (((get_ticks() - t) * 1000 / HZ) >= 200000) {
-//            p_vmem = (u8 *) V_MEM_BASE;
-//            for (int i = 0; i < V_MEM_SIZE >> 1; i++) {
-//                *p_vmem++ = ' ';
-//                *p_vmem++ = DEFAULT_CHAR_COLOR;
-//            }
-//            p_tty->p_console->cursor = 0;
-//            p_tty->p_console->current_start_addr = p_tty->p_console->original_addr;
-//            set();
+        if (!p_tty->p_console->search_mode) {
+            if (((get_ticks() - t) * 1000 / HZ) >= 50000) {
+//                clear_screen(p_tty->p_console);
+                t = get_ticks();
+            }
         }
     }
 }
@@ -145,8 +132,8 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
                         *(p_vmem + 2 * i + 1) = DEFAULT_CHAR_COLOR;
                     }
                     p_tty->p_console->index_search_chs = 0;
-
                     change_white(p_tty->p_console);
+                    break;
                 }
             case F1:
             case F2:

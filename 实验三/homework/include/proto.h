@@ -57,11 +57,11 @@ PUBLIC void out_char(CONSOLE *p_con, char ch);
 
 PUBLIC void scroll_screen(CONSOLE *p_con, int direction);
 
-PUBLIC void flush2(CONSOLE *p_on);
+PUBLIC void flush2(CONSOLE *p_con);
 
-PUBLIC void change_white(CONSOLE *p_on);
+PUBLIC void change_white(CONSOLE *p_con);
 
-PUBLIC void set();
+PUBLIC void clear_screen(CONSOLE *p_con);
 
 /* 以下是系统调用相关 */
 
