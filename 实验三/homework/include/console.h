@@ -24,7 +24,7 @@ typedef struct s_console {
     unsigned char search_original_addr;
     unsigned int search_mode;
     unsigned int search_mode_lock;
-    unsigned int cursor_position;
+//    unsigned int cursor_position;
 } CONSOLE;
 
 #define SCR_UP    1    /* scroll forward */

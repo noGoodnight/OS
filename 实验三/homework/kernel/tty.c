@@ -45,9 +45,9 @@ PUBLIC void task_tty() {
             tty_do_read(p_tty);
             tty_do_write(p_tty);
         }
-        if (((get_ticks() - t) * 1000 / HZ) >= 80000) {
+        if (((get_ticks() - t) * 1000 / HZ) >= 200000) {
             for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
-                if(p_tty->p_console->search_mode == 0){
+                if(p_tty->p_console->search_mode == 1){
                     break;
                 }
                 init_tty(p_tty);
@@ -118,15 +118,15 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
                 }
                 break;
             case ESC:
-                if (p_tty->p_console->search_mode_lock == 0) {
+                if (p_tty->p_console->search_mode == 0) {
                     p_tty->p_console->search_mode = 1;
-                    p_tty->p_console->cursor_position = p_tty->p_console->cursor;
+                    p_tty->p_console->search_original_addr = p_tty->p_console->cursor;
                 } else {
                     p_tty->p_console->search_mode_lock = 0;
                     p_tty->p_console->search_mode = 0;
 
                     p_tty->p_console->index_chs -= p_tty->p_console->index_search_chs;
-                    p_tty->p_console->cursor = p_tty->p_console->cursor_position;
+                    p_tty->p_console->cursor = p_tty->p_console->search_original_addr;
                     flush2(p_tty->p_console);
 
                     u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);

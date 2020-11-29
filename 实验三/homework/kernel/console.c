@@ -274,7 +274,7 @@ PRIVATE void change_red(CONSOLE *p_con) {
         }
     }
     unsigned int start = p_con->index_line_cursors * SCREEN_WIDTH;
-    while (start < p_con->cursor_position) {
+    while (start < p_con->cursor) {
         int match = 0;
         for (int j = 0; j < p_con->index_search_chs; j++) {
             u8 *p_vmem = (u8 *) (V_MEM_BASE + start * 2);
