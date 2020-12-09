@@ -53,7 +53,7 @@ PUBLIC void init_screen(TTY *p_tty) {
         /* 第一个控制台沿用原来的光标位置 */
         p_tty->p_console->cursor = disp_pos / 2;
         u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
-        for (unsigned int i = 0; i < 5000; i++) {
+        for (unsigned int i = 0; i < 8000; i++) {
             *p_vmem = ' ';
             *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
             p_vmem += 2;
@@ -85,14 +85,14 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
     switch (ch) {
         case '\n':
             if (p_con->search_mode == 0) {
-                if (p_con->cursor < p_con->original_addr + p_con->v_mem_limit - SCREEN_WIDTH) {
+//                if (p_con->cursor < p_con->original_addr + p_con->v_mem_limit - SCREEN_WIDTH) {
                     p_con->chs[p_con->index_chs] = '\n';
                     p_con->index_chs++;
                     p_con->line_cursors[p_con->index_line_cursors] = p_con->cursor;
                     p_con->index_line_cursors++;
                     p_con->cursor = p_con->original_addr +
                                     SCREEN_WIDTH * ((p_con->cursor - p_con->original_addr) / SCREEN_WIDTH + 1);
-                }
+//                }
             } else {
                 change_red(p_con);
             }
@@ -151,11 +151,11 @@ PUBLIC void out_char(CONSOLE *p_con, char ch) {
             }
             p_con->chs[p_con->index_chs] = ch;
             p_con->index_chs++;
-            if (p_con->cursor < p_con->original_addr + p_con->v_mem_limit - 1) {
+//            if (p_con->cursor < p_con->original_addr + p_con->v_mem_limit - 1) {
                 *p_vmem++ = ch;
                 *p_vmem++ = p_con->search_mode ? SEARCH_CHAR_COLOR : DEFAULT_CHAR_COLOR;
                 p_con->cursor++;
-            }
+//            }
             break;
     }
 
@@ -301,6 +301,7 @@ PRIVATE void change_red(CONSOLE *p_con) {
             start++;
         }
     }
+    flush(p_con);
 }
 
 PUBLIC void change_white(CONSOLE *p_con) {

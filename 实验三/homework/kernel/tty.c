@@ -45,15 +45,15 @@ PUBLIC void task_tty() {
             tty_do_read(p_tty);
             tty_do_write(p_tty);
         }
-        if (((get_ticks() - t) * 1000 / HZ) >= 500000) {
-            for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
-                if(p_tty->p_console->search_mode == 1){
-                    break;
-                }
-                init_tty(p_tty);
-            }
-            t = get_ticks();
-        }
+//        if (((get_ticks() - t) * 1000 / HZ) >= 500000) {
+//            for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
+//                if(p_tty->p_console->search_mode == 1){
+//                    break;
+//                }
+//                init_tty(p_tty);
+//            }
+//            t = get_ticks();
+//        }
     }
 }
 
@@ -100,16 +100,16 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
                 break;
             case UP:
 //                if (p_tty->p_console->search_mode_lock == 0) {
-                    if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                        scroll_screen(p_tty->p_console, SCR_DN);
-                    }
+                if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
+                    scroll_screen(p_tty->p_console, SCR_DN);
+                }
 //                }
                 break;
             case DOWN:
 //                if (p_tty->p_console->search_mode_lock == 0) {
-                    if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
-                        scroll_screen(p_tty->p_console, SCR_UP);
-                    }
+                if ((key & FLAG_SHIFT_L) || (key & FLAG_SHIFT_R)) {
+                    scroll_screen(p_tty->p_console, SCR_UP);
+                }
 //                }
                 break;
             case TAB:
@@ -125,17 +125,24 @@ PUBLIC void in_process(TTY *p_tty, u32 key) {
                     p_tty->p_console->search_mode_lock = 0;
                     p_tty->p_console->search_mode = 0;
 
-                    p_tty->p_console->index_chs -= p_tty->p_console->index_search_chs;
-                    p_tty->p_console->cursor = p_tty->p_console->search_original_addr;
-                    flush2(p_tty->p_console);
-
-                    u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
-                    for (int i = 0; i < p_tty->p_console->index_search_chs; i++) {
-                        *(p_vmem + 2 * i) = ' ';
-                        *(p_vmem + 2 * i + 1) = DEFAULT_CHAR_COLOR;
+                    for (unsigned int i = 0; i < p_tty->p_console->index_search_chs; i++) {
+                        out_char(p_tty->p_console, '\b');
                     }
                     p_tty->p_console->index_search_chs = 0;
+                    flush2(p_tty->p_console);
                     change_white(p_tty->p_console);
+
+//                    p_tty->p_console->index_chs -= p_tty->p_console->index_search_chs;
+//                    p_tty->p_console->cursor = p_tty->p_console->search_original_addr;
+//                    flush2(p_tty->p_console);
+
+//                    u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
+//                    for (int i = 0; i < p_tty->p_console->index_search_chs; i++) {
+//                        *(p_vmem + 2 * i) = ' ';
+//                        *(p_vmem + 2 * i + 1) = DEFAULT_CHAR_COLOR;
+//                    }
+//                    p_tty->p_console->index_search_chs = 0;
+//                    change_white(p_tty->p_console);
                     break;
                 }
             case F1:
