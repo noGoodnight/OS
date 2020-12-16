@@ -33,4 +33,4 @@ extern irq_handler irq_table[];
 extern TTY tty_table[];
 extern CONSOLE console_table[];
 
-
+extern char *a_str;

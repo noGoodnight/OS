@@ -72,3 +72,11 @@ PUBLIC int sys_get_ticks();        /* sys_call */
 PUBLIC void sys_call();             /* int_handler */
 PUBLIC int get_ticks();
 
+PUBLIC void sys_print_str();
+
+PUBLIC void sys_print();
+
+PUBLIC void print_str();
+
+PUBLIC void print(char *str);
+

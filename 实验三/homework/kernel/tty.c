@@ -45,15 +45,15 @@ PUBLIC void task_tty() {
             tty_do_read(p_tty);
             tty_do_write(p_tty);
         }
-//        if (((get_ticks() - t) * 1000 / HZ) >= 500000) {
-//            for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
-//                if(p_tty->p_console->search_mode == 1){
-//                    break;
-//                }
-//                init_tty(p_tty);
-//            }
-//            t = get_ticks();
-//        }
+        if (((get_ticks() - t) * 1000 / HZ) >= 100000) {
+            for (p_tty = TTY_FIRST; p_tty < TTY_END; p_tty++) {
+                if(p_tty->p_console->search_mode == 1){
+                    break;
+                }
+                init_tty(p_tty);
+            }
+            t = get_ticks();
+        }
     }
 }
 

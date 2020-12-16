@@ -84,7 +84,7 @@
 #define    V_MEM_SIZE    0x8000    /* 32K: B8000H -> BFFFFH */
 
 /* Hardware interrupts */
-#define    NR_IRQ        16    /* Number of IRQs */
+#define    NR_IRQ        17    /* Number of IRQs */
 #define    CLOCK_IRQ    0
 #define    KEYBOARD_IRQ    1
 #define    CASCADE_IRQ    2    /* cascade enable for 2nd AT controller */
@@ -97,6 +97,6 @@
 #define    AT_WINI_IRQ    14    /* at winchester */
 
 /* system call */
-#define NR_SYS_CALL     1
+#define NR_SYS_CALL     2
 
 #endif /* _ORANGES_CONST_H_ */

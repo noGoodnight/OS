@@ -42,6 +42,7 @@ global _start	; 导出 _start
 
 global restart
 global sys_call
+global sys_print
 
 global	divide_error
 global	single_step_exception
@@ -349,6 +350,16 @@ sys_call:
         cli
 
         ret
+
+sys_print:
+    call save
+    sti
+;    push dword[esi + EBXREG - P_STACKBASE]
+    call [sys_call_table + eax * 4]
+    mov [esi + EAXREG - P_STACKBASE], eax
+;    pop dword[esi + EBXREG - P_STACKBASE]
+    cli
+    ret
 
 
 ; ====================================================================================

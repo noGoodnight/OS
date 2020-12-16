@@ -45,3 +45,6 @@ PUBLIC int sys_get_ticks() {
     return ticks;
 }
 
+PUBLIC void sys_print_str() {
+    disp_str(a_str);
+}

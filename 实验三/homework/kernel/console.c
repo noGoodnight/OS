@@ -49,15 +49,15 @@ PUBLIC void init_screen(TTY *p_tty) {
     p_tty->p_console->cursor = p_tty->p_console->original_addr;
 
     if (nr_tty == 0) {
-        disp_pos = 0;
+//        disp_pos = 0;
         /* 第一个控制台沿用原来的光标位置 */
         p_tty->p_console->cursor = disp_pos / 2;
-        u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
-        for (unsigned int i = 0; i < 8000; i++) {
-            *p_vmem = ' ';
-            *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
-            p_vmem += 2;
-        }
+//        u8 *p_vmem = (u8 *) (V_MEM_BASE + p_tty->p_console->cursor * 2);
+//        for (unsigned int i = 0; i < 8000; i++) {
+//            *p_vmem = ' ';
+//            *(p_vmem + 1) = DEFAULT_CHAR_COLOR;
+//            p_vmem += 2;
+//        }
 //        clear_screen(p_tty->p_console);
     } else {
         out_char(p_tty->p_console, nr_tty + '0');
