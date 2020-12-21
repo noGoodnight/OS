@@ -73,15 +73,15 @@ PUBLIC void sys_print_str(){
     disp_str(s);
 }
 
-PUBLIC void pro_sleep(int milli_seconds) {
+PUBLIC void sys_sleep(int milli_seconds) {
     p_proc_ready->ready_time = get_ticks() + milli_seconds / (1000 / HZ);
     schedule();
 }
 
 /*======================================================================*
-                           semaphore_p
+                           sys_sem_p
  *======================================================================*/
-PUBLIC void semaphore_p(SEMAPHORE *p) {
+PUBLIC void sys_sem_p(SEMAPHORE *p) {
     p->value--;
     if (p->value < 0) {
         //阻塞该进程，置为等待状态，转向进程调度

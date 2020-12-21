@@ -162,6 +162,10 @@ PUBLIC void init_prot() {
 
     init_idt_desc(INT_VECTOR_SYS_PRINT, DA_386IGate, sys_call_print, PRIVILEGE_USER);
 
+    init_idt_desc(INT_VECTOR_SYS_SLEEP, DA_386IGate, sys_call_sleep, PRIVILEGE_USER);
+
+    init_idt_desc(INT_VECTOR_SYS_SEM_P, DA_386IGate, sys_call_sem_p, PRIVILEGE_USER);
+
     /* 填充 GDT 中 TSS 这个描述符 */
     memset(&tss, 0, sizeof(tss));
     tss.ss0 = SELECTOR_KERNEL_DS;
