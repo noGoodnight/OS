@@ -24,8 +24,7 @@ PUBLIC int kernel_main() {
     PROCESS *p_proc = proc_table;
     char *p_task_stack = task_stack + STACK_SIZE_TOTAL;
     u16 selector_ldt = SELECTOR_LDT_FIRST;
-    int i;
-    for (i = 0; i < NR_TASKS; i++) {
+    for (int i = 0; i < NR_TASKS; i++) {
         strcpy(p_proc->p_name, p_task->name);    // name of the process
         p_proc->pid = i;            // pid
         p_proc->ldt_sel = selector_ldt;
@@ -43,15 +42,32 @@ PUBLIC int kernel_main() {
         p_proc->regs.esp = (u32) p_task_stack;
         p_proc->regs.eflags = 0x1202; /* IF=1, IOPL=1 */
 
+        p_proc->ready_time = 0;
+        p_proc->wait_for_sem = FALSE;
+
         p_task_stack -= p_task->stacksize;
         p_proc++;
         p_task++;
         selector_ldt += 1 << 3;
     }
 
-    proc_table[0].ticks = proc_table[0].priority = 15;
-    proc_table[1].ticks = proc_table[1].priority = 5;
-    proc_table[2].ticks = proc_table[2].priority = 3;
+//    proc_table[0].ticks = proc_table[0].priority = 15;
+//    proc_table[1].ticks = proc_table[1].priority = 5;
+//    proc_table[2].ticks = proc_table[2].priority = 3;
+    standard = read_first;
+    init_sem(&read_block, 1);
+    init_sem(&write_block, 1);
+    init_sem(&reader_control, max_nr_readers);
+    init_sem(&mutex, 1);
+    init_sem(&mutex_w, 1);
+    nr_readers = 0;
+    nr_writers = 0;
+
+    disp_pos = 0;
+    for (int i = 0; i < 8000; i++) {
+        disp_str(" ");
+    }
+    disp_pos = 0;
 
     k_reenter = 0;
     ticks = 0;
@@ -75,37 +91,50 @@ PUBLIC int kernel_main() {
                                TestA
  *======================================================================*/
 void TestA() {
-    int i = 0;
-    while (1) {
-        print("A.");
-        milli_delay(10);
-    }
+    read("A", 0x0A, 2 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestB() {
-    int i = 0x1000;
-    while (1) {
-        disp_str("B.");
-        milli_delay(10);
-    }
+    read("B", 0x0B, 3 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestC() {
-    int i = 0x2000;
-    while (1) {
-        disp_str("C.");
-        milli_delay(10);
-    }
+    read("C", 0x0C, 3 * round);
 }
 
+void TestD() {
+    write("D", 0x0D, 3 * round);
+}
 
-PUBLIC void print(char *str){
+void TestE() {
+    write("E", 0x0E, 4 * round);
+}
+
+void TestF() {
+    int writing = FALSE;
+    sem_p(&mutex_w);
+    if (nr_writers > 0) {
+        writing = TRUE;
+    }
+    sem_v(&mutex_w);
+
+    if (writing) {
+        print_str("F write                                                                       ");
+    } else {
+        print_str("F read                                                                    ");
+        disp_int(nr_writers);
+    }
+
+    sleep(round);
+}
+
+PUBLIC void print(char *str) {
     s = str;
     print_str();
 }

@@ -6,6 +6,7 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* klib.asm */
+
 PUBLIC void out_byte(u16 port, u8 value);
 
 PUBLIC u8 in_byte(u16 port);
@@ -32,6 +33,12 @@ void TestB();
 
 void TestC();
 
+void TestD();
+
+void TestE();
+
+void TestF();
+
 /* i8259.c */
 PUBLIC void put_irq_handler(int irq, irq_handler handler);
 
@@ -55,9 +62,37 @@ PUBLIC void milli_delay(int);
 
 PUBLIC void schedule();
 
+PUBLIC void enable_irq(int);
+
+PUBLIC void disp_int(int);
 
 // my funcitions
-PUBLIC void print(char*);
+PUBLIC void print(char *);
+
 PUBLIC void print_str();
+
 PUBLIC void sys_call_print();
+
 PUBLIC void sys_print_str();
+
+PUBLIC void sem_p(SEMAPHORE *);
+
+PUBLIC void sem_v(SEMAPHORE *);
+
+PUBLIC void sys_sem_p(SEMAPHORE *);
+
+PUBLIC void sys_sem_v(SEMAPHORE *);
+
+PUBLIC void sleep(int);
+
+PUBLIC void sys_sleep(int);
+
+PUBLIC void p_sleep(int);
+
+PUBLIC void semaphore_p(SEMAPHORE *);
+
+PUBLIC void semaphore_v(SEMAPHORE *);
+
+PUBLIC void read(char *, int, int);
+
+PUBLIC void write(char *, int, int);

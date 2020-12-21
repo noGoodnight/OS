@@ -52,14 +52,28 @@ typedef struct s_task {
 
 
 /* Number of tasks */
-#define NR_TASKS    3
+#define NR_TASKS    6
 
 /* stacks of tasks */
 #define STACK_SIZE_TESTA    0x8000
 #define STACK_SIZE_TESTB    0x8000
 #define STACK_SIZE_TESTC    0x8000
+#define STACK_SIZE_TESTD    0x8000
+#define STACK_SIZE_TESTE    0x8000
+#define STACK_SIZE_TESTF    0x8000
 
 #define STACK_SIZE_TOTAL    (STACK_SIZE_TESTA + \
                 STACK_SIZE_TESTB + \
-                STACK_SIZE_TESTC)
+                STACK_SIZE_TESTC + \
+                STACK_SIZE_TESTD + \
+                STACK_SIZE_TESTE + \
+                STACK_SIZE_TESTF)
 
+typedef struct semaphore {
+    int value;
+    PROCESS *wait_list[10];
+    int start;
+    int end;
+} SEMAPHORE;
+
+PUBLIC void init_sem(SEMAPHORE *, int);
