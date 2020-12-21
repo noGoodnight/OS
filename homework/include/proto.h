@@ -54,19 +54,11 @@ PUBLIC void clock_handler(int irq);
 /* proc.c */
 PUBLIC int sys_get_ticks();        /* sys_call */
 
-PUBLIC void semaphore_v(SEMAPHORE *v);
-
 PUBLIC void init_sem(SEMAPHORE *semaphore, int i);
 
 /* syscall.asm */
 PUBLIC void sys_call();             /* int_handler */
 PUBLIC int get_ticks();
-
-
-
-PUBLIC void sem_v(SEMAPHORE *s);
-
-PUBLIC void sys_sem_v(SEMAPHORE *s);
 
 // unknown sources
 PUBLIC void milli_delay(int);
@@ -90,11 +82,17 @@ PUBLIC void sys_call_sleep();
 
 PUBLIC void sys_sleep(int);
 
-PUBLIC void sem_p(SEMAPHORE*);
+PUBLIC void sem_p(SEMAPHORE *);
 
 PUBLIC void sys_call_sem_p();
 
-PUBLIC void sys_sem_p(SEMAPHORE*);
+PUBLIC void sys_sem_p(SEMAPHORE *);
+
+PUBLIC void sem_v(SEMAPHORE *s);
+
+PUBLIC void sys_call_sem_v();
+
+PUBLIC void sys_sem_v(SEMAPHORE *s);
 
 PUBLIC void p_read(char *, int, int);
 

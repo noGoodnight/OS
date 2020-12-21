@@ -49,7 +49,7 @@
 #define HZ             100  /* clock freq (software settable on IBM-PC) */
 
 /* Hardware interrupts */
-#define    NR_IRQ        19    /* Number of IRQs */
+#define    NR_IRQ        20    /* Number of IRQs */
 #define    CLOCK_IRQ    0
 #define    KEYBOARD_IRQ    1
 #define    CASCADE_IRQ    2    /* cascade enable for 2nd AT controller */

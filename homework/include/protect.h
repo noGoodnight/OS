@@ -147,6 +147,7 @@ typedef struct s_tss {
 #define INT_VECTOR_SYS_PRINT 0x91
 #define INT_VECTOR_SYS_SLEEP 0x92
 #define INT_VECTOR_SYS_SEM_P 0x93
+#define INT_VECTOR_SYS_SEM_V 0x94
 
 /* 宏 */
 /* 线性地址 → 物理地址 */

@@ -95,7 +95,7 @@ PUBLIC void sys_sem_p(SEMAPHORE *p) {
 /*======================================================================*
                            semaphore_v
  *======================================================================*/
-PUBLIC void semaphore_v(SEMAPHORE *v) {
+PUBLIC void sys_sem_v(SEMAPHORE *v) {
     v->value++;
     if (v->value <= 0) {
         v->wait_list[v->start]->wait_for_sem = FALSE;

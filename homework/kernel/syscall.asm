@@ -7,8 +7,6 @@
 
 %include "sconst.inc"
 
-extern semaphore_v
-
 _NR_get_ticks       equ 0 ; 要跟 global.c 中 sys_call_table 的定义相对应！
 INT_VECTOR_SYS_CALL equ 0x90
 
@@ -30,7 +28,6 @@ global  print_str
 global  sleep
 global  sem_p
 global  sem_v
-global  sys_sem_v
 
 bits 32
 [section .text]
@@ -68,12 +65,6 @@ sem_v:
 	mov eax, _NR_sem_v
 	push ebx
 	mov ebx, [esp+8]
-	int INT_VECTOR_SYS_CALL
-	pop ebx
-	ret
-
-sys_sem_v:
-	push ebx
-	call semaphore_v
+	int INT_VECTOR_SYS_SEM_V
 	pop ebx
 	ret
