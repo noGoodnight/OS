@@ -89,4 +89,10 @@
 // round time
 #define round 20000
 
+//process type
+#define other 0
+#define reader 1
+#define writer 2
+
+
 

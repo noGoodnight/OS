@@ -51,8 +51,14 @@ PUBLIC int kernel_main() {
         p_task++;
         selector_ldt += 1 << 3;
     }
+    proc_table[0].p_type = reader;
+    proc_table[1].p_type = reader;
+    proc_table[2].p_type = reader;
+    proc_table[3].p_type = writer;
+    proc_table[4].p_type = writer;
+    proc_table[5].p_type = other;
 
-    standard = read_first;
+    standard = write_first;
     nr_readers = 0;
     nr_writers = 0;
 
