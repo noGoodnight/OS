@@ -44,6 +44,7 @@ PUBLIC int kernel_main() {
         p_proc->regs.eflags = 0x1202; /* IF=1, IOPL=1 */
         p_proc->ready_time = 0;
         p_proc->wait_for_sem = FALSE;
+        p_proc->turns = 0;
 
         p_task_stack -= p_task->stacksize;
         p_proc++;
@@ -61,7 +62,6 @@ PUBLIC int kernel_main() {
     init_sem(&mutex_w, 1);
     init_sem(&read_block, 1);
 
-    first_time = TRUE;
     // todo: clean the screen
     disp_pos = 0;
 
@@ -116,10 +116,12 @@ void TestF() {
     while (1) {
         sem_p(&mutex_w);
         if (nr_writers > 0) {
-            print("F");
+//            print("F");
+            disp_color_str("F", f_color);
             disp_color_str(": write.       ", f_color);
         } else {
-            print("F");
+//            print("F");
+            disp_color_str("F", f_color);
             disp_color_str(": read. ", f_color);
             disp_int(nr_readers);
             disp_color_str("    ", f_color);

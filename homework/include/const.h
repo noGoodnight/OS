@@ -74,7 +74,7 @@
 #define c_color 0x0c
 #define e_color 0x0d
 #define d_color 0x0e
-#define f_color 0x0f
+#define f_color 0x09
 
 // standard
 #define read_first 0
