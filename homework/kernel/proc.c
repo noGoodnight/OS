@@ -84,7 +84,6 @@ PUBLIC void sys_sleep(int milli_seconds) {
 PUBLIC void sys_sem_p(SEMAPHORE *p) {
     p->value--;
     if (p->value < 0) {
-        //阻塞该进程，置为等待状态，转向进程调度
         p_proc_ready->wait_for_sem = TRUE;
         p->wait_list[p->end] = p_proc_ready;
         p->end = (p->end + 1) % SEMAPHORE_LIST_SIZE;
