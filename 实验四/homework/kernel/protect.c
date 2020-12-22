@@ -8,8 +8,8 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
-#include "proto.h"
 #include "proc.h"
+#include "proto.h"
 #include "global.h"
 
 
@@ -162,6 +162,11 @@ PUBLIC void init_prot() {
 
     init_idt_desc(INT_VECTOR_SYS_PRINT, DA_386IGate, sys_call_print, PRIVILEGE_USER);
 
+    init_idt_desc(INT_VECTOR_SYS_SLEEP, DA_386IGate, sys_call_sleep, PRIVILEGE_USER);
+
+    init_idt_desc(INT_VECTOR_SYS_SEM_P, DA_386IGate, sys_call_sem_p, PRIVILEGE_USER);
+
+    init_idt_desc(INT_VECTOR_SYS_SEM_V, DA_386IGate, sys_call_sem_v, PRIVILEGE_USER);
     /* 填充 GDT 中 TSS 这个描述符 */
     memset(&tss, 0, sizeof(tss));
     tss.ss0 = SELECTOR_KERNEL_DS;
@@ -173,8 +178,9 @@ PUBLIC void init_prot() {
     PROCESS *p_proc = proc_table;
     u16 selector_ldt = INDEX_LDT_FIRST << 3;
     for (i = 0; i < NR_TASKS; i++) {
-        init_descriptor(&gdt[selector_ldt >> 3], vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts),
-                        LDT_SIZE * sizeof(DESCRIPTOR) - 1, DA_LDT);
+        init_descriptor(&gdt[selector_ldt >> 3],
+                        vir2phys(seg2phys(SELECTOR_KERNEL_DS), proc_table[i].ldts), LDT_SIZE * sizeof(DESCRIPTOR) - 1,
+                        DA_LDT);
         p_proc++;
         selector_ldt += 1 << 3;
     }

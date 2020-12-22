@@ -8,9 +8,9 @@
 #include "type.h"
 #include "const.h"
 #include "protect.h"
+#include "proc.h"
 #include "proto.h"
 #include "string.h"
-#include "proc.h"
 #include "global.h"
 
 
@@ -24,6 +24,7 @@ PUBLIC int kernel_main() {
     PROCESS *p_proc = proc_table;
     char *p_task_stack = task_stack + STACK_SIZE_TOTAL;
     u16 selector_ldt = SELECTOR_LDT_FIRST;
+
     for (int i = 0; i < NR_TASKS; i++) {
         strcpy(p_proc->p_name, p_task->name);    // name of the process
         p_proc->pid = i;            // pid
@@ -41,32 +42,33 @@ PUBLIC int kernel_main() {
         p_proc->regs.eip = (u32) p_task->initial_eip;
         p_proc->regs.esp = (u32) p_task_stack;
         p_proc->regs.eflags = 0x1202; /* IF=1, IOPL=1 */
-
         p_proc->ready_time = 0;
         p_proc->wait_for_sem = FALSE;
+        p_proc->turns = 0;
 
         p_task_stack -= p_task->stacksize;
         p_proc++;
         p_task++;
         selector_ldt += 1 << 3;
     }
+    proc_table[0].p_type = reader;
+    proc_table[1].p_type = reader;
+    proc_table[2].p_type = reader;
+    proc_table[3].p_type = writer;
+    proc_table[4].p_type = writer;
+    proc_table[5].p_type = other;
 
-//    proc_table[0].ticks = proc_table[0].priority = 15;
-//    proc_table[1].ticks = proc_table[1].priority = 5;
-//    proc_table[2].ticks = proc_table[2].priority = 3;
-    standard = read_first;
-    init_sem(&read_block, 1);
-    init_sem(&write_block, 1);
-    init_sem(&reader_control, max_nr_readers);
-    init_sem(&mutex, 1);
-    init_sem(&mutex_w, 1);
+    standard = write_first;
     nr_readers = 0;
     nr_writers = 0;
 
-    disp_pos = 0;
-    for (int i = 0; i < 8000; i++) {
-        disp_str(" ");
-    }
+    init_sem(&mutex, 1);
+    init_sem(&write_block, 1);
+    init_sem(&reader_control, max_nr_readers);
+    init_sem(&mutex_w, 1);
+    init_sem(&read_block, 1);
+
+    // todo: clean the screen
     disp_pos = 0;
 
     k_reenter = 0;
@@ -91,50 +93,46 @@ PUBLIC int kernel_main() {
                                TestA
  *======================================================================*/
 void TestA() {
-    read("A", 0x0A, 2 * round);
+    p_read("A", a_color, 2 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestB() {
-    read("B", 0x0B, 3 * round);
+    p_read("B", b_color, 3 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestC() {
-    read("C", 0x0C, 3 * round);
+    p_read("C", c_color, 3 * round);
 }
 
 void TestD() {
-    write("D", 0x0D, 3 * round);
+    p_write("D", d_color, 3 * round);
 }
 
 void TestE() {
-    write("E", 0x0E, 4 * round);
+    p_write("E", e_color, 4 * round);
 }
 
 void TestF() {
-    int writing = FALSE;
-    sem_p(&mutex_w);
-    if (nr_writers > 0) {
-        writing = TRUE;
+    while (1) {
+        sem_p(&mutex_w);
+        if (nr_writers > 0) {
+//            print("F");
+            disp_color_str("F", f_color);
+            disp_color_str(": write.       ", f_color);
+        } else {
+//            print("F");
+            disp_color_str("F", f_color);
+            disp_color_str(": read. ", f_color);
+            disp_int(nr_readers);
+            disp_color_str("    ", f_color);
+        }
+        sem_v(&mutex_w);
+        sleep(round);
     }
-    sem_v(&mutex_w);
-
-    if (writing) {
-        print_str("F write                                                                       ");
-    } else {
-        print_str("F read                                                                    ");
-        disp_int(nr_writers);
-    }
-
-    sleep(round);
-}
-
-PUBLIC void print(char *str) {
-    s = str;
-    print_str();
 }

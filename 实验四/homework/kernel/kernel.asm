@@ -43,6 +43,9 @@ global _start	; 导出 _start
 global restart
 global sys_call
 global sys_call_print
+global sys_call_sleep
+global sys_call_sem_p
+global sys_call_sem_v
 
 global	divide_error
 global	single_step_exception
@@ -341,14 +344,10 @@ save:
 ; ====================================================================================
 sys_call:
         call    save
-
         sti
-
         call    [sys_call_table + eax * 4]
         mov     [esi + EAXREG - P_STACKBASE], eax
-
         cli
-
         ret
 
 sys_call_print:
@@ -359,7 +358,35 @@ sys_call_print:
     cli
     ret
 
+sys_call_sleep:
+    call save
+    sti
+    push ebx
+    call [sys_call_table + eax * 4]
+    mov  [esi + EAXREG - P_STACKBASE], eax
+    pop ebx
+    cli
+    ret
 
+sys_call_sem_p:
+    call save
+    sti
+    push ebx
+    call [sys_call_table + eax * 4]
+    mov  [esi + EAXREG - P_STACKBASE], eax
+    pop ebx
+    cli
+    ret
+
+sys_call_sem_v:
+    call save
+    sti
+    push ebx
+    call [sys_call_table + eax * 4]
+    mov  [esi + EAXREG - P_STACKBASE], eax
+    pop ebx
+    cli
+    ret
 ; ====================================================================================
 ;				    restart
 ; ====================================================================================

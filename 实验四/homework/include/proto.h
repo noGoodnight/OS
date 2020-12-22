@@ -6,7 +6,6 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /* klib.asm */
-
 PUBLIC void out_byte(u16 port, u8 value);
 
 PUBLIC u8 in_byte(u16 port);
@@ -22,6 +21,8 @@ PUBLIC u32 seg2phys(u16 seg);
 
 /* klib.c */
 PUBLIC void delay(int time);
+
+PUBLIC void disp_int(int input);
 
 /* kernel.asm */
 void restart();
@@ -53,6 +54,8 @@ PUBLIC void clock_handler(int irq);
 /* proc.c */
 PUBLIC int sys_get_ticks();        /* sys_call */
 
+PUBLIC void init_sem(SEMAPHORE *semaphore, int i);
+
 /* syscall.asm */
 PUBLIC void sys_call();             /* int_handler */
 PUBLIC int get_ticks();
@@ -60,13 +63,11 @@ PUBLIC int get_ticks();
 // unknown sources
 PUBLIC void milli_delay(int);
 
-PUBLIC void schedule();
-
 PUBLIC void enable_irq(int);
 
-PUBLIC void disp_int(int);
+PUBLIC void schedule();
 
-// my funcitions
+// my addition
 PUBLIC void print(char *);
 
 PUBLIC void print_str();
@@ -75,24 +76,24 @@ PUBLIC void sys_call_print();
 
 PUBLIC void sys_print_str();
 
-PUBLIC void sem_p(SEMAPHORE *);
-
-PUBLIC void sem_v(SEMAPHORE *);
-
-PUBLIC void sys_sem_p(SEMAPHORE *);
-
-PUBLIC void sys_sem_v(SEMAPHORE *);
-
 PUBLIC void sleep(int);
+
+PUBLIC void sys_call_sleep();
 
 PUBLIC void sys_sleep(int);
 
-PUBLIC void p_sleep(int);
+PUBLIC void sem_p(SEMAPHORE *);
 
-PUBLIC void semaphore_p(SEMAPHORE *);
+PUBLIC void sys_call_sem_p();
 
-PUBLIC void semaphore_v(SEMAPHORE *);
+PUBLIC void sys_sem_p(SEMAPHORE *);
 
-PUBLIC void read(char *, int, int);
+PUBLIC void sem_v(SEMAPHORE *s);
 
-PUBLIC void write(char *, int, int);
+PUBLIC void sys_call_sem_v();
+
+PUBLIC void sys_sem_v(SEMAPHORE *s);
+
+PUBLIC void p_read(char *, int, int);
+
+PUBLIC void p_write(char *, int, int);

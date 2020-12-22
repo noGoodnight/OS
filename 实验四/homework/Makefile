@@ -16,9 +16,9 @@ DASM		= ndisasm
 CC		= gcc
 LD		= ld
 ASMBFLAGS	= -I boot/include/
-ASMKFLAGS	= -I include/ -f elf32
-CFLAGS		= -I include/ -c -fno-builtin -m32 -fno-stack-protector
-LDFLAGS		= -s -Ttext $(ENTRYPOINT) -m elf_i386
+ASMKFLAGS	= -I include/ -f elf
+CFLAGS		= -I include/ -m32 -c -fno-builtin -fno-stack-protector
+LDFLAGS		= -m elf_i386 -s -Ttext $(ENTRYPOINT)
 DASMFLAGS	= -u -o $(ENTRYPOINT) -e $(ENTRYOFFSET)
 
 # This Program
@@ -44,6 +44,9 @@ image : realclean everything clean buildimg
 
 clean :
 	rm -f $(OBJS)
+
+run :    image
+	    bochs -f bochsrc
 
 realclean :
 	rm -f $(OBJS) $(ORANGESBOOT) $(ORANGESKERNEL)
@@ -108,6 +111,3 @@ lib/kliba.o : lib/kliba.asm
 
 lib/string.o : lib/string.asm
 	$(ASM) $(ASMKFLAGS) -o $@ $<
-
-run: 	image
-		bochs

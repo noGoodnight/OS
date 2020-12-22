@@ -49,7 +49,7 @@
 #define HZ             100  /* clock freq (software settable on IBM-PC) */
 
 /* Hardware interrupts */
-#define    NR_IRQ        17    /* Number of IRQs */
+#define    NR_IRQ        20    /* Number of IRQs */
 #define    CLOCK_IRQ    0
 #define    KEYBOARD_IRQ    1
 #define    CASCADE_IRQ    2    /* cascade enable for 2nd AT controller */
@@ -66,11 +66,33 @@
 
 #endif /* _ORANGES_CONST_H_ */
 
+// my addition
 
-// my additions
+// colors
+#define a_color 0x0a
+#define b_color 0x0b
+#define c_color 0x0c
+#define e_color 0x0d
+#define d_color 0x0e
+#define f_color 0x09
+
+// standard
 #define read_first 0
 #define write_first 1
 
+// max_nr_readers
 #define max_nr_readers 3
 
-#define round 2000
+// sem list size
+#define SEMAPHORE_LIST_SIZE 10
+
+// round time
+#define round 20000
+
+//process type
+#define other 0
+#define reader 1
+#define writer 2
+
+
+

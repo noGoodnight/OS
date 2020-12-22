@@ -27,7 +27,6 @@ typedef struct s_stackframe {    /* proc_ptr points here				↑ Low			*/
     u32 ss;        /*  ┛						┷High			*/
 } STACK_FRAME;
 
-
 typedef struct s_proc {
     STACK_FRAME regs;          /* process registers saved in stack frame */
 
@@ -42,6 +41,8 @@ typedef struct s_proc {
 
     int ready_time;
     int wait_for_sem;
+    int turns;
+    int p_type;
 } PROCESS;
 
 typedef struct s_task {
@@ -49,6 +50,14 @@ typedef struct s_task {
     int stacksize;
     char name[32];
 } TASK;
+
+
+typedef struct semaphore {
+    int value;
+    PROCESS *wait_list[SEMAPHORE_LIST_SIZE];
+    int start;
+    int end;
+} SEMAPHORE;
 
 
 /* Number of tasks */
@@ -62,6 +71,7 @@ typedef struct s_task {
 #define STACK_SIZE_TESTE    0x8000
 #define STACK_SIZE_TESTF    0x8000
 
+
 #define STACK_SIZE_TOTAL    (STACK_SIZE_TESTA + \
                 STACK_SIZE_TESTB + \
                 STACK_SIZE_TESTC + \
@@ -69,11 +79,11 @@ typedef struct s_task {
                 STACK_SIZE_TESTE + \
                 STACK_SIZE_TESTF)
 
-typedef struct semaphore {
-    int value;
-    PROCESS *wait_list[10];
-    int start;
-    int end;
-} SEMAPHORE;
-
-PUBLIC void init_sem(SEMAPHORE *, int);
+extern SEMAPHORE read_block;
+extern SEMAPHORE write_block;
+extern SEMAPHORE reader_control;
+extern SEMAPHORE mutex;
+extern SEMAPHORE mutex_w;
+extern int nr_readers;
+extern int nr_writers;
+extern int standard;
