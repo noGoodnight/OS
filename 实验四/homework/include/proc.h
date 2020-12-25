@@ -43,6 +43,7 @@ typedef struct s_proc {
     int wait_for_sem;
     int turns;
     int p_type;
+    int p_run;
 } PROCESS;
 
 typedef struct s_task {

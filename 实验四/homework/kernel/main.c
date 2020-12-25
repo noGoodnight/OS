@@ -45,6 +45,7 @@ PUBLIC int kernel_main() {
         p_proc->ready_time = 0;
         p_proc->wait_for_sem = FALSE;
         p_proc->turns = 0;
+        p_proc->p_run = FALSE;
 
         p_task_stack -= p_task->stacksize;
         p_proc++;

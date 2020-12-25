@@ -88,7 +88,7 @@
 #define SEMAPHORE_LIST_SIZE 10
 
 // round time
-#define round 20000
+#define round 200
 
 //process type
 #define other 0

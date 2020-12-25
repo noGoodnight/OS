@@ -22,11 +22,13 @@ PUBLIC int nr_readers;
 PUBLIC int nr_writers;
 PUBLIC int standard;
 
-PRIVATE void p_read(PROCESS *p, char *, Color, int);
+PRIVATE void p_read(PROCESS *, char *, Color, int);
 
-PRIVATE void p_write(PROCESS *p, char *, Color, int);
+PRIVATE void p_write(PROCESS *, char *, Color, int);
 
-PRIVATE void print_start(char *, int);
+PRIVATE void print_read_start(char* , int);
+
+PRIVATE void print_write_start(char*,int);
 
 PRIVATE void print_end(char *, int);
 
@@ -129,7 +131,8 @@ PRIVATE void p_read(PROCESS *p, char *name, Color color, int time) {
             }
             sem_v(&mutex);
 
-            print_start(name, color);
+            print_read_start(name, color);
+            p->p_run = TRUE;
             milli_delay(time);
 
             sem_p(&mutex);
@@ -140,8 +143,9 @@ PRIVATE void p_read(PROCESS *p, char *name, Color color, int time) {
             sem_v(&mutex);
 
             print_end(name, color);
+            p->p_run = FALSE;
             sem_v(&reader_control);
-        } else if (standard == write_first) {
+        } else if (standard == write_first || standard == write_first_2) {
             sem_p(&read_block);
 
             sem_p(&reader_control);
@@ -155,7 +159,8 @@ PRIVATE void p_read(PROCESS *p, char *name, Color color, int time) {
 
             sem_v(&read_block);
 
-            print_start(name, color);
+            print_read_start(name, color);
+            p->p_run = TRUE;
             milli_delay(time);
 
             sem_p(&mutex);
@@ -166,6 +171,7 @@ PRIVATE void p_read(PROCESS *p, char *name, Color color, int time) {
             sem_v(&mutex);
 
             print_end(name, color);
+            p->p_run = FALSE;
             sem_v(&reader_control);
         }
         p->turns++;
@@ -193,7 +199,8 @@ PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
             nr_writers += 1;
             sem_v(&mutex_w);
 
-            print_start(name, color);
+            print_read_start(name, color);
+            p->p_run = TRUE;
             milli_delay(time);
 
             sem_p(&mutex_w);
@@ -201,8 +208,9 @@ PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
             sem_v(&mutex_w);
 
             print_end(name, color);
+            p->p_run = FALSE;
             sem_v(&write_block);
-        } else if (standard == write_first) {
+        } else if (standard == write_first || standard == write_first_2) {
             sem_p(&read_block);
 
             sem_p(&write_block);
@@ -211,7 +219,8 @@ PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
             nr_writers += 1;
             sem_v(&mutex_w);
 
-            print_start(name, color);
+            print_read_start(name, color);
+            p->p_run = TRUE;
             milli_delay(time);
 
             sem_p(&mutex_w);
@@ -219,6 +228,7 @@ PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
             sem_v(&mutex_w);
 
             print_end(name, color);
+            p->p_run = FALSE;
             sem_v(&write_block);
 
             sem_v(&read_block);
@@ -239,11 +249,18 @@ PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
     }
 }
 
-PRIVATE void print_start(char *name, Color color) {
+PRIVATE void print_read_start(char *name, Color color) {
     disp_color_str(name, color);
     disp_color_str(": start.       ", color);
     disp_color_str(name, color);
     disp_color_str(": reading.     ", color);
+}
+
+PRIVATE void print_write_start(char*name, Color color){
+    disp_color_str(name, color);
+    disp_color_str(": start.       ", color);
+    disp_color_str(name, color);
+    disp_color_str(": writing.     ", color);
 }
 
 PRIVATE void print_end(char *name, Color color) {
