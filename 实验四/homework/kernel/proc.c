@@ -22,6 +22,14 @@ PUBLIC int nr_readers;
 PUBLIC int nr_writers;
 PUBLIC int standard;
 
+PRIVATE void p_read(PROCESS *p, char *, Color, int);
+
+PRIVATE void p_write(PROCESS *p, char *, Color, int);
+
+PRIVATE void print_start(char *, int);
+
+PRIVATE void print_end(char *, int);
+
 /*======================================================================*
                               schedule
  *======================================================================*/
@@ -64,12 +72,12 @@ PUBLIC int sys_get_ticks() {
     return ticks;
 }
 
-PUBLIC void print(char *str){
+PUBLIC void print(char *str) {
     s = str;
     print_str();
 }
 
-PUBLIC void sys_print_str(){
+PUBLIC void sys_print_str() {
     disp_str(s);
 }
 
@@ -78,9 +86,6 @@ PUBLIC void sys_sleep(int milli_seconds) {
     schedule();
 }
 
-/*======================================================================*
-                           sys_sem_p
- *======================================================================*/
 PUBLIC void sys_sem_p(SEMAPHORE *p) {
     p->value--;
     if (p->value < 0) {
@@ -91,9 +96,6 @@ PUBLIC void sys_sem_p(SEMAPHORE *p) {
     }
 }
 
-/*======================================================================*
-                           semaphore_v
- *======================================================================*/
 PUBLIC void sys_sem_v(SEMAPHORE *v) {
     v->value++;
     if (v->value <= 0) {
@@ -107,7 +109,15 @@ PUBLIC void init_sem(SEMAPHORE *semaphore, int i) {
     semaphore->start = semaphore->end = 0;
 }
 
-PUBLIC void p_read(char *name, int color, int time) {
+PUBLIC void process(PROCESS *p, char *name, Color color, int time) {
+    if (p->p_type == reader) {
+        p_read(p, name, color, time);
+    } else if (p->p_type == writer) {
+        p_write(p, name, color, time);
+    }
+}
+
+PRIVATE void p_read(PROCESS *p, char *name, Color color, int time) {
     while (1) {
         if (standard == read_first) {
             sem_p(&reader_control);
@@ -119,10 +129,7 @@ PUBLIC void p_read(char *name, int color, int time) {
             }
             sem_v(&mutex);
 
-            disp_color_str(name, color);
-            disp_color_str(": start.       ", color);
-            disp_color_str(name, color);
-            disp_color_str(": reading.     ", color);
+            print_start(name, color);
             milli_delay(time);
 
             sem_p(&mutex);
@@ -132,10 +139,9 @@ PUBLIC void p_read(char *name, int color, int time) {
             }
             sem_v(&mutex);
 
-            disp_color_str(name, color);
-            disp_color_str(": end          ", color);
+            print_end(name, color);
             sem_v(&reader_control);
-        } else {
+        } else if (standard == write_first) {
             sem_p(&read_block);
 
             sem_p(&reader_control);
@@ -149,10 +155,7 @@ PUBLIC void p_read(char *name, int color, int time) {
 
             sem_v(&read_block);
 
-            disp_color_str(name, color);
-            disp_color_str(": start.       ", color);
-            disp_color_str(name, color);
-            disp_color_str(": reading.     ", color);
+            print_start(name, color);
             milli_delay(time);
 
             sem_p(&mutex);
@@ -162,14 +165,26 @@ PUBLIC void p_read(char *name, int color, int time) {
             }
             sem_v(&mutex);
 
-            disp_color_str(name, color);
-            disp_color_str(": end.         ", color);
+            print_end(name, color);
             sem_v(&reader_control);
+        }
+        p->turns++;
+        sum_read_turns++;
+        if (read_sleep_turns == 0) {
+            if (sum_read_turns - sum_write_turns > 5 * max_nr_readers) {
+                read_sleep_turns++;
+                sleep(10 * round);
+            }
+        } else {
+            if (sum_read_turns - sum_write_turns > 5 * max_nr_readers * read_sleep_turns) {
+                read_sleep_turns++;
+                sleep(10 * round);
+            }
         }
     }
 }
 
-PUBLIC void p_write(char *name, int color, int time) {
+PRIVATE void p_write(PROCESS *p, char *name, Color color, int time) {
     while (1) {
         if (standard == read_first) {
             sem_p(&write_block);
@@ -178,20 +193,16 @@ PUBLIC void p_write(char *name, int color, int time) {
             nr_writers += 1;
             sem_v(&mutex_w);
 
-            disp_color_str(name, color);
-            disp_color_str(": start.       ", color);
-            disp_color_str(name, color);
-            disp_color_str(": writing.     ", color);
+            print_start(name, color);
             milli_delay(time);
 
             sem_p(&mutex_w);
             nr_writers -= 1;
             sem_v(&mutex_w);
 
-            disp_color_str(name, color);
-            disp_color_str(": end.         ", color);
+            print_end(name, color);
             sem_v(&write_block);
-        } else {
+        } else if (standard == write_first) {
             sem_p(&read_block);
 
             sem_p(&write_block);
@@ -200,22 +211,43 @@ PUBLIC void p_write(char *name, int color, int time) {
             nr_writers += 1;
             sem_v(&mutex_w);
 
-            disp_color_str(name, color);
-            disp_color_str(": start.       ", color);
-            disp_color_str(name, color);
-            disp_color_str(": writing.     ", color);
+            print_start(name, color);
             milli_delay(time);
 
             sem_p(&mutex_w);
             nr_writers -= 1;
             sem_v(&mutex_w);
 
-            disp_color_str(name, color);
-            disp_color_str(": end.         ", color);
+            print_end(name, color);
             sem_v(&write_block);
 
             sem_v(&read_block);
         }
+        p->turns++;
+        sum_write_turns++;
+        if (write_sleep_turns == 0) {
+            if (sum_write_turns - sum_read_turns > 5 * max_nr_readers) {
+                write_sleep_turns++;
+                sleep(10 * round);
+            }
+        } else {
+            if (sum_write_turns - sum_read_turns > 5 * max_nr_readers * write_sleep_turns) {
+                write_sleep_turns++;
+                sleep(10 * round);
+            }
+        }
     }
+}
+
+PRIVATE void print_start(char *name, Color color) {
+    disp_color_str(name, color);
+    disp_color_str(": start.       ", color);
+    disp_color_str(name, color);
+    disp_color_str(": reading.     ", color);
+}
+
+PRIVATE void print_end(char *name, Color color) {
+    disp_color_str(name, color);
+    disp_color_str(": end.         ", color);
 }
 

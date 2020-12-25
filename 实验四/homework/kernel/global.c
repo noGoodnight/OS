@@ -30,5 +30,9 @@ PUBLIC    irq_handler irq_table[NR_IRQ];
 
 PUBLIC    system_call sys_call_table[NR_SYS_CALL] = {sys_get_ticks, sys_print_str, sys_sleep, sys_sem_p, sys_sem_v};
 
-PUBLIC int first_time;
+//my additions
 PUBLIC char *s;
+PUBLIC int sum_read_turns;
+PUBLIC int sum_write_turns;
+PUBLIC int read_sleep_turns;
+PUBLIC int write_sleep_turns;

@@ -30,5 +30,8 @@ extern TASK task_table[];
 extern irq_handler irq_table[];
 
 // my addition
-extern int first_time;
 extern char *s;
+extern int sum_read_turns;
+extern int sum_write_turns;
+extern int read_sleep_turns;
+extern int write_sleep_turns;

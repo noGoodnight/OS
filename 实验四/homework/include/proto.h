@@ -94,6 +94,4 @@ PUBLIC void sys_call_sem_v();
 
 PUBLIC void sys_sem_v(SEMAPHORE *s);
 
-PUBLIC void p_read(char *, int, int);
-
-PUBLIC void p_write(char *, int, int);
+PUBLIC void process(PROCESS *, char *, Color, int);

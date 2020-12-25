@@ -58,9 +58,13 @@ PUBLIC int kernel_main() {
     proc_table[4].p_type = writer;
     proc_table[5].p_type = other;
 
-    standard = write_first;
+    standard = read_first;
     nr_readers = 0;
     nr_writers = 0;
+    sum_read_turns = 0;
+    sum_write_turns = 0;
+    read_sleep_turns = 0;
+    write_sleep_turns = 0;
 
     init_sem(&mutex, 1);
     init_sem(&write_block, 1);
@@ -93,29 +97,29 @@ PUBLIC int kernel_main() {
                                TestA
  *======================================================================*/
 void TestA() {
-    p_read("A", a_color, 2 * round);
+    process(proc_table + 0, "A", a_color, 2 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestB() {
-    p_read("B", b_color, 3 * round);
+    process(proc_table + 1, "B", b_color, 3 * round);
 }
 
 /*======================================================================*
                                TestB
  *======================================================================*/
 void TestC() {
-    p_read("C", c_color, 3 * round);
+    process(proc_table + 2, "C", c_color, 3 * round);
 }
 
 void TestD() {
-    p_write("D", d_color, 3 * round);
+    process(proc_table + 3, "D", d_color, 3 * round);
 }
 
 void TestE() {
-    p_write("E", e_color, 4 * round);
+    process(proc_table + 4, "E", e_color, 4 * round);
 }
 
 void TestF() {

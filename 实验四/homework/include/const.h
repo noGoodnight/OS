@@ -79,6 +79,7 @@
 // standard
 #define read_first 0
 #define write_first 1
+#define write_first_2 2
 
 // max_nr_readers
 #define max_nr_readers 3
