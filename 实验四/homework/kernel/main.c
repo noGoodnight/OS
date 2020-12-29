@@ -59,7 +59,7 @@ PUBLIC int kernel_main() {
     proc_table[4].p_type = writer;
     proc_table[5].p_type = other;
 
-    standard = read_first;
+    standard = write_first;
     nr_readers = 0;
     nr_writers = 0;
     sum_read_turns = 0;
